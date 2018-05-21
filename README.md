@@ -4,6 +4,11 @@ Python package for loading filtering and visualizing data produced by the met ma
 ## Getting Started
 The following codebase is developed in Python 3.6 and makes heavy use of numpy, matplotlib, and pandas. Wind rose figures also require the python-windrose package available at https://github.com/python-windrose/windrose.
 
+## Example
+Example processing and visualizations are provided in the ipython notebooks. M5_demo.ipynb is a good place to start.
+
+Data from the NWTC met masts is publicly available at https://nwtc.nrel.gov/135mData.
+
 ## Required packages
 numpy - used to structure data into arrays, perform basic operations, etc.
 matplotlib - used in flow visualization

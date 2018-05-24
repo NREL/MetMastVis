@@ -395,7 +395,7 @@ def make_datetime_vector(filename, span=10, freq=20.0):
 ###########################################
 
 ###########################################
-def make_dataframe_for_height(inputdata, timerange, probeheight=74):
+def make_dataframe_for_height(inputdata, timerange, probeheight=74, include_UTC=False):
     """
     
     Parameters
@@ -405,21 +405,31 @@ def make_dataframe_for_height(inputdata, timerange, probeheight=74):
     probeheight : int
     """
     
+    
     # select all variables at a given height
     varnames = list(inputdata.keys())
     varnames = [var for var in varnames if str(probeheight) in var]
+    # get windspeed variable
+    temp = [var for var in varnames if 'WS' in var]
+    temp.extend([var for var in varnames if 'CupEqHorizSpeed' in var])
+    # get winddirection variable     
+    temp.extend([var for var in varnames if 'WD' in var])
+    temp.extend([var for var in varnames if 'direction' in var])
     # include the UTC time
-    varnames.append('time_UTC')
+    if include_UTC is True:
+        temp.append('time_UTC')
     
     # get variables of interest into a new dict
-    sonicdat = {var: inputdata[var][0][0][0].squeeze() for var in varnames}
+    sonicdat = {var: inputdata[var][0][0][0].squeeze() for var in temp}
     # make a Pandas DataFrame
     sonicdat = pd.DataFrame.from_dict(sonicdat)
     # setup datetime index
     sonicdat['datetime'] = timerange[0:len(sonicdat.index)]
     sonicdat.set_index('datetime', inplace=True)
     sonicdat.index.to_datetime()
-    
+
+    sonicdat = sonicdat.rename(index=str, columns={temp[0]:'WS', temp[1]:'WD'})
+
     return sonicdat
 ###########################################
 
@@ -434,23 +444,18 @@ def setup_IEC_params(sonicdat, probeheight=100):
     """
     
     ### quantities of interest for IEC 
-    # cup-equivalent horizontal wind speed 
-    cupspeed = sonicdat['Sonic_CupEqHorizSpeed_{}m'.format(probeheight)]
     # turbulence estimate over period, standard deviation of cupspeed
-    sigma_data = np.std(cupspeed)
-    # wind direction from sonic data channels
-    winddir = sonicdat['Sonic_direction_{}m'.format(probeheight)]
     # filter wind directions that cross the 360/0 threshold
-    if winddir.mean() > 180:
-        winddir[winddir<10] = winddir[winddir<10]+360
+    if sonicdat['WD'].mean() > 180:
+        sonicdat.loc[sonicdat['WD'] < 100,'WD'] += 360
     else:
-        winddir[winddir<350] = winddir[winddir<350]-360
+       sonicdat.loc[sonicdat['WD'] > 350,'WD'] += -360
     
     ######## parameters
     ### IEC parameters
     params = {'turbclass': 'IA'}
-    # Based on class IA
-    params['Vref'] = 50 #m/s
+    # Based on IEC Class IA
+    params['Vref'] = 50.0 #m/s
     params['Iref'] = 0.16 # turbulence intensity
     # 'average' velocity
     params['Vave'] = 0.2*params['Vref']
@@ -475,12 +480,13 @@ def setup_IEC_params(sonicdat, probeheight=100):
     ### normal wind profile model
     params['zhub'] = 80 # m
     # 'hub' height velocity (really just mean probe velocity)
-    params['vhub'] = cupspeed.mean() # m/s
+    params['vhub'] = sonicdat['WS'].mean() # m/s
     # dummy vertical coordinate
     params['z'] = np.linspace(0,120,120)
     # standard normal velocity profile
     params['vprofile'] = params['vhub']*(params['z']/params['zhub'])**params['alpha']
-    
+    params['sigma_data'] = sonicdat['WS'].std()
+
     ### Normal Wind speed distributions
     # dummy velocity data
     params['vrange'] = np.linspace(0,params['Vref'],100)
@@ -490,77 +496,76 @@ def setup_IEC_params(sonicdat, probeheight=100):
     # velocity cumulative probability density function
     params['cdf'] = 1.0-np.exp(-np.pi* (params['vrange']/(2*params['Vave']))**2)
     
-    
-    return cupspeed, winddir, sigma_data, params
+    # Extreme wind speed model (EWM)
+    params['Ve50'] = 1.4*params['Vref']*(params['probeheight']/params['zhub'])**(0.11)
+    params['Ve01'] = 0.8*params['Ve50']
+
+    return params
 ###########################################
 
 ###########################################
-def find_EWM_events(cupspeed, params):
+def find_EWM_events(sonicdat, params):
     """
     look for extreme wind speed events,
-    if found, return True, will be used to index files later
+    events will be extracted from df and concatenated to 
+    a larger  will be used to index files later
     """
-    # Extreme wind speed model (EWM)
-    Ve50 = 1.4*params['Vref']*(params['z']/params['zhub'])**(0.11)
-    Ve01 = 0.8*Ve50
 
     # Compare extreme wind speeds to data
-    # if an extreme event occurs, append filename to list
-    Ve50test = cupspeed[cupspeed > Ve50[params['probeheight']]]
-    if len(Ve50test) > 0:
-        Ve50eventfound = [cupspeed.index[0]]
-    else:
-        Ve50eventfound = []
-        
-    Ve01test = cupspeed[cupspeed > Ve01[params['probeheight']]]
-    if len(Ve01test) > 0:
-        Ve01eventfound = [cupspeed.index[0]]
-    else:
-        Ve01eventfound = []
+    # extract df of events
+    Ve50eventfound = sonicdat[sonicdat['WS'] > params['Ve50']]
+    Ve01eventfound = sonicdat[sonicdat['WS'] > params['Ve01']]
+
     
     return Ve01eventfound, Ve50eventfound
 ###########################################
 
 
 ###########################################
-def find_EOG_events(cupspeed, params):
+def find_EOG_events(sonicdat, params, T=10.5):
     """
     look for extreme operating gust events,
     if found, return True, will be used to index files later
+    
+    Parameters
+    ----------
+    T: float, Period for search
     """
-    # Extreme operating gust (EOG)
-    Ve50 = 1.4*params['Vref']*(params['z']/params['zhub'])**(0.11)
-    Ve01 = 0.8*Ve50
-    T = 10.5 # seconds
+
     t = np.linspace(0,T,100)
 
     # Compare maximum gust speed to data
     # if an extreme events occurs, append time to list
-    EOGeventfound = []
-    for itime, tempdir in cupspeed.iloc[::int(T*params['freq'])].items():
-        starttime = itime
-        endtime = starttime + dt.timedelta(seconds=T) # starttime + 6 seconds
-        # extract 6 second slice of direction data
-        vslice = cupspeed.loc[starttime:endtime]
-        # standard velocity variance
-        sigma_1 = params['Iref']*(0.75*vslice.mean() + 5.6)
+    EOGeventfound = pd.DataFrame()
 
-        Vgust = np.min([1.35*(Ve01[params['zhub']]-vslice.iloc[0]), \
+    for itime in range(0,len(sonicdat),int(T*params['freq'])):
+    # for itime, tempspeed in sonicdat['WS'].iloc[::int(T*params['freq'])].items():
+        
+        # extract 6 second slice of direction data
+        vslice = sonicdat.iloc[itime:itime+int(T*params['freq'])]
+
+        # standard velocity variance
+        sigma_1 = params['Iref']*(0.75*vslice['WS'].mean() + 5.6)
+
+        Vgust = np.min([1.35*(params['Ve01']-vslice['WS'].iloc[0]), \
                     3.3*(sigma_1/(1+0.1*params['D']/params['Lambda_1']))])
-        Vgust = vslice.iloc[0]-0.37*Vgust*np.sin(3*np.pi*t/T)*(1-np.cos(2*np.pi*t/T))
+        Vgust = vslice['WS'].iloc[0]-0.37*Vgust*np.sin(3*np.pi*t/T)*(1-np.cos(2*np.pi*t/T))
         
         # test 
-        Vgusttest = vslice[vslice > Vgust.max()]
+        Vgusttest = vslice[vslice['WS'] > Vgust.max()]
         # index times of EOG events
         if len(Vgusttest) > 0:
-            EOGeventfound.append(starttime)
-            
+            temp = pd.DataFrame([[vslice['WS'].iloc[0],vslice['WS'].max(),vslice['WS'].min(),\
+                                    vslice['WD'].iloc[0],vslice['WD'].max(),vslice['WD'].min()]], \
+                                columns=['WS','WSmax','WSmin','WD','WDmax','WDmin'], index=vslice.index[0:1])
+            EOGeventfound = pd.concat([EOGeventfound, temp])
+
     return EOGeventfound
 ###########################################
 
 
 ###########################################
-def find_ETM_events(cupspeed, sigma_data, params):
+def find_ETM_events(sonicdat, params):
     """
     look for extreme turbulence model events,
     if found, return True, will be used to index files later
@@ -571,62 +576,51 @@ def find_ETM_events(cupspeed, sigma_data, params):
 
     # Compare maximum turbulence to data
     # if an extreme event occurs, append filename to list
-    sigmatest = sigma_data > sigmatest
-    ETMeventfound = []
+    sigmatest = params['sigma_data'] > sigmatest
+    ETMeventfound = pd.DataFrame()
     if sigmatest:
-        ETMeventfound.append(cupspeed.index[0])
+        temp = pd.DataFrame([[vslice['WS'].iloc[0],vslice['WS'].max(),vslice['WS'].min(),\
+                                    vslice['WD'].iloc[0],vslice['WD'].max(),vslice['WD'].min()]], \
+                                columns=['WS','WSmax','WSmin','WD','WDmax','WDmin'], index=vslice.index[0:1])
+        ETMeventfound = pd.concat([ETMeventfound, temp])
         
     return ETMeventfound
 ###########################################
 
 ###########################################
-def find_EDC_events(cupspeed, winddir, params):
+def find_EDC_events(sonicdat, params, T = 6):
     """
     look for extreme direction change events,
     if found, return True, will be used to index files later
     """
-    # Extreme direction change (EDC)
-    
-    T = 6 # seconds * sampling freq
+    # seconds * sampling freq
     stride = int(T*params['freq'])
     
     # index times of EDC events
-    EDCeventfound=[]
-    for itime, tempdir in winddir.iloc[:-stride:stride].items():
-        # timerange for search
+    EDCeventfound = pd.DataFrame()
+    for itime in range(0,len(sonicdat),stride):
+    # for itime, tempspeed in sonicdat['WS'].iloc[::int(T*params['freq'])].items():
+        
         # extract 6 second slice of direction data
-        starttime = itime
-        endtime = starttime + dt.timedelta(seconds=T) # starttime + 6 seconds
+        vslice = sonicdat.iloc[itime:itime+stride]
         
-        vslice = cupspeed.loc[starttime:endtime]
-        tslice = winddir.loc[starttime:endtime]
-        
-        sigma_1 = params['Iref']*(0.75*vslice.mean() + 5.6)
+        sigma_1 = params['Iref']*(0.75*vslice['WS'].mean() + 5.6)
         
         # Maximum allowable change in wind direction over a 6 second period
-        theta_e = np.degrees(4*np.arctan(sigma_1/ \
-                                     (vslice.iloc[0]*(1+0.1*params['D']/params['Lambda_1']))))
-    
-#         # test 
-#         dirtest = tslice[np.abs(tslice-tempdir) > theta_e]
-
-#         # append event times to output
-#         if len(dirtest) > 0:
-#             EDCeventfound.append(starttime)
+        theta_e = np.degrees(4*np.arctan(sigma_1/(vslice['WS'].iloc[0]*(1+0.1*params['D']/params['Lambda_1']))))
             
         # test 
-        if np.abs(tslice[starttime] - tslice[endtime]) > theta_e:
-            EDCeventfound.append(starttime)
-        
-    # # if no EDC events found, set to false
-    # if len(EDCeventfound)<1:
-    #     EDCeventfound=False   
+        if np.abs(vslice['WD'].iloc[0] - vslice['WD'].iloc[stride-1]) > theta_e:
+            temp = pd.DataFrame([[vslice['WS'].iloc[0],vslice['WS'].max(),vslice['WS'].min(),\
+                                    vslice['WD'].iloc[0],vslice['WD'].max(),vslice['WD'].min()]], \
+                                columns=['WS','WSmax','WSmin','WD','WDmax','WDmin'], index=vslice.index[0:1])
+            EDCeventfound = pd.concat([EDCeventfound, temp])
         
     return EDCeventfound
 ###########################################
 
 ###########################################
-def find_ECD_events(cupspeed, winddir, params):
+def find_ECD_events(sonicdat, params, T = 10):
     """
     look Extreme coherent gust with direction change (ECD),
     if found, return True, will be used to index files later
@@ -635,9 +629,7 @@ def find_ECD_events(cupspeed, winddir, params):
     
     # extreme coherent gust velocity magnitude (delta)
     Vcg = 15 # m/s See IEC standards
-    # rise time
-    T = 10 # s 
-    # 10 seconds at 20 Hz
+    # T seconds at 20 Hz
     t = np.linspace(0,10,int(T*params['freq']))
     stride = int(T*params['freq'])
     
@@ -647,22 +639,25 @@ def find_ECD_events(cupspeed, winddir, params):
 
     # scan for ECD
     # index times of EDC events
-    ECDeventfound=[]
-    for itime, tempdir in cupspeed.iloc[:-stride:stride].items():
-        # start and end times
-        starttime = itime
-        endtime = starttime + dt.timedelta(seconds=T) # starttime + 10 seconds
+    ECDeventfound = pd.DataFrame()
+    for itime in range(0,len(sonicdat),stride):
+    # for itime, tempspeed in sonicdat['WS'].iloc[::int(T*params['freq'])].items():
+        
+        # extract 6 second slice of direction data
+        vslice = sonicdat.iloc[itime:itime+stride]
+
         # start and end velocities
-        vstart = cupspeed.loc[starttime]
-        vend = cupspeed.loc[endtime]
+        vstart = vslice['WS'].iloc[0]
+        vend = vslice['WS'].iloc[stride-1]
 
         # extreme  cohcerent gust velocity change
         V_ECD = vstart + Vcg
+
         # test for wind speed condition
         if vend >= V_ECD:
             # start and end directions
-            dstart = winddir.loc[starttime]
-            dend = winddir.loc[endtime]
+            dstart = vslice['WD'].iloc[0]
+            dend = vslice['WD'].iloc[itime+stride]
 
             # extreme  cohcerent gust direction change
             if params['vhub'] < 4:
@@ -673,14 +668,17 @@ def find_ECD_events(cupspeed, winddir, params):
             # test for wind direction condition
             
             if np.abs(dend-dstart) > theta_cg:
-                ECDeventfound.append(starttime)
+                temp = pd.DataFrame([[vslice['WS'].iloc[0],vslice['WS'].max(),vslice['WS'].min(),\
+                                    vslice['WD'].iloc[0],vslice['WD'].max(),vslice['WD'].min()]], \
+                                columns=['WS','WSmax','WSmin','WD','WDmax','WDmin'], index=vslice.index[0:1])
+                ECDeventfound = pd.concat([ECDeventfound, temp])
         
     return ECDeventfound
 ###########################################
 
 
 ###########################################
-def find_EWS_events(cupspeed, params):
+def find_EWS_events(sonicdat, params, T = 12):
     """
     look Extreme wind shear (EWS),
     if found, return True, will be used to index files later
@@ -689,42 +687,39 @@ def find_EWS_events(cupspeed, params):
 
     # extreme coherent gust velocity magnitude
     Vcg = 15 # m/s
-    # rise time
-    T = 12 # s 
-    # 12 seconds at 20 Hz
+    # T seconds at 20 Hz
     t = np.linspace(0,T,int(T*params['freq']))
     stride = int(T*params['freq'])
-    
-    
 
     # # transient horizontal shear (not applicable in our data...)
     # v_horz_pos = vhub*(probeheight/zhub)**alpha + ((probeheight-zhub)/D)*(2.5 + 0.2*beta*sigma_1*(D/Lambda_1)**0.25)*(1-np.cos(np.pi*T/T))
 
     # scan for EWS
-    EWSeventfound = []
-    for itime, tempdir in cupspeed.iloc[:-stride:stride].items():
-        starttime = itime
-        endtime = starttime + dt.timedelta(seconds=T) # starttime + 10 seconds
+    EWSeventfound = pd.DataFrame()
+    for itime in range(0,len(sonicdat),stride):
 
-        vslice = cupspeed.loc[starttime:endtime]
-        sigma_1 = params['Iref']*(0.75*vslice.mean() + 5.6)
+        # extract 6 second slice of direction data
+        vslice = sonicdat.iloc[itime:itime+stride]
+        
+        sigma_1 = params['Iref']*(0.75*vslice['WS'].mean() + 5.6)
         
         extreme = ((params['probeheight']-params['zhub'])/params['D'])*\
             (2.5 + 0.2*params['beta']*sigma_1*(params['D']/params['Lambda_1'])**0.25)\
             *(1-np.cos(np.pi*T/T))
 
         # transient vertical shear
-        v_vert_pos = vslice.iloc[0]*(params['probeheight']/params['zhub'])**params['alpha'] + extreme
-        v_vert_neg = vslice.iloc[0]*(params['probeheight']/params['zhub'])**params['alpha'] - extreme
+        v_vert_pos = vslice['WS'].iloc[0]*(params['probeheight']/params['zhub'])**params['alpha'] + extreme
+        v_vert_neg = vslice['WS'].iloc[0]*(params['probeheight']/params['zhub'])**params['alpha'] - extreme
     
         # test
-        vtest = vslice[(vslice > v_vert_pos) | (vslice < v_vert_neg)]
+        vtest = vslice['WS'][(vslice['WS'] > v_vert_pos) & (vslice['WS'] < v_vert_neg)]
 
         if len(vtest) > 0:
-            EWSeventfound.append(starttime)
+            temp = pd.DataFrame([[vslice['WS'].iloc[0],vslice['WS'].max(),vslice['WS'].min(),\
+                                    vslice['WD'].iloc[0],vslice['WD'].max(),vslice['WD'].min()]], \
+                                columns=['WS','WSmax','WSmin','WD','WDmax','WDmin'], index=vslice.index[0:1])
+            EWSeventfound = pd.concat([EWSeventfound, temp])
     
-    # if len(EWSeventfound) < 1:
-    #     EWSeventfound = False
         
     return EWSeventfound
 ###########################################

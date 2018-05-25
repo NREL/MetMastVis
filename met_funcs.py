@@ -579,15 +579,15 @@ def find_ETM_events(sonicdat, params):
     sigmatest = params['sigma_data'] > sigmatest
     ETMeventfound = pd.DataFrame()
     if sigmatest:
-        temp = pd.DataFrame([[vslice['WS'].iloc[0],vslice['WS'].max(),vslice['WS'].min(),\
-                                    vslice['WD'].iloc[0],vslice['WD'].max(),vslice['WD'].min()]], \
-                                columns=['WS','WSmax','WSmin','WD','WDmax','WDmin'], index=vslice.index[0:1])
+        temp = pd.DataFrame([[sonicdat['WS'].iloc[0],sonicdat['WS'].max(),sonicdat['WS'].min(),\
+                                    sonicdat['WD'].iloc[0],sonicdat['WD'].max(),sonicdat['WD'].min()]], \
+                                columns=['WS','WSmax','WSmin','WD','WDmax','WDmin'], index=sonicdat.index[0:1])
         ETMeventfound = pd.concat([ETMeventfound, temp])
         
     return ETMeventfound
 ###########################################
 
-###########################################
+###########################################     
 def find_EDC_events(sonicdat, params, T = 6):
     """
     look for extreme direction change events,
@@ -657,7 +657,7 @@ def find_ECD_events(sonicdat, params, T = 10):
         if vend >= V_ECD:
             # start and end directions
             dstart = vslice['WD'].iloc[0]
-            dend = vslice['WD'].iloc[itime+stride]
+            dend = vslice['WD'].iloc[stride]
 
             # extreme  cohcerent gust direction change
             if params['vhub'] < 4:

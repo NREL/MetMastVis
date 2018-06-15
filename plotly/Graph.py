@@ -1,13 +1,17 @@
+import numpy as np
+import pandas as pd
+import pickle as pkl
+import datetime as dt
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+from colour import Color
+from windrose import WindroseAxes
+from calendar import monthrange, month_name
+import pylab as p 
+
 import vis
 import utils
 import met_funcs
-import plotly_vis
-import pandas as pd
-from colour import Color
-import plotly
-from plotly import tools
-import plotly.plotly as py
-import plotly.graph_objs as go
 
 # Place input files here
 inputfiles_here = ['2012_August.csv']
@@ -29,6 +33,6 @@ cate_info = met_funcs.get_catinfo(actual_data)
 
 # Plot the data with the desired category and function
 category = 'speed'
-fig1 = plotly_vis.stability_winddir_scatter(actual_data,cate_info,category)
+vis.normalized_hist_by_stability(actual_data,cate_info,category)
 
-py.iplot(fig1, filename = 'MetMast-Test_funcStabWinddirScatter')
+plt.show()

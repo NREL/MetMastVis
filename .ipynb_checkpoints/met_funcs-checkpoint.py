@@ -104,7 +104,7 @@ def drop_nan_cols(metdat):
 
 ###########################################
 def qc_mask(metdat):
-    temp = [name for name in list(metdat.columns.values) if ' QC' not in name if 'records' not in name.lower()]
+    temp = [name for name in list(metdat.columns.values) if ' QC' not in name]
     qcNames = [name for name in list(metdat.columns.values) if ' QC' in name]
     fNames = [name for name in temp if name + ' QC' in qcNames]
     
@@ -112,7 +112,7 @@ def qc_mask(metdat):
     print('number of QC columns:', len(qcNames))
     
     # initialize filtered dataframe with 'record', 'version'
-    dfFilt = pd.DataFrame(index=metdat.index)
+    dfFilt = metdat[metdat.columns.values[[0,1]]].copy()
     # apply QC mask to each set of columns individually
     for f, q in zip(fNames, qcNames):
     #     print(fname, qname)
@@ -164,19 +164,16 @@ def groom_data(metdat, varcats):
     TODO: break out into separate functions? make more general?
     #, dropcols=True, filter=['ti','monin-obukhov length','temperature','gradient richarson']):
     """
-    # ## drop columns
-    # keepcols = [v  for x in varcats for v in varcats[x]]
-    # dropcols = [col for col in metdat.columns if col not in keepcols]
-    # metdat.drop(dropcols, axis=1, inplace=True)
+    ## drop columns
+    keepcols = [v  for x in varcats for v in varcats[x]]
+    dropcols = [col for col in metdat.columns if col not in keepcols]
+    metdat.drop(dropcols, axis=1, inplace=True)
 
     # filter TI to where wind speed >= 1 m/s
-    # spdcols = [col for col in varcats['speed'] if 'sonic' not in col.lower()]
-    for ii,item in enumerate(varcats['speed']):
-        if 'sonic' in item.lower():
-            continue
+    for ii,_ in enumerate(varcats['speed']):
         metdat.loc[metdat[varcats['speed'][ii]]<1,varcats['ti'][ii]] = np.nan
 
-    # filter obukhov length
+    # filter obhukov length
     for col in varcats['monin-obukhov length']:
         metdat.loc[np.abs(metdat[col])>2000, col] = np.nan
         
@@ -188,7 +185,7 @@ def groom_data(metdat, varcats):
     for col in varcats['gradient richardson']:
         metdat.loc[np.abs(metdat[col])>20, col] = np.nan
 
-    # print('number of columns after filtering: {}'.format(len(metdat.columns)))
+    print('number of columns after filtering: {}'.format(len(metdat.columns)))
 ###########################################
 
 ###########################################
@@ -230,7 +227,7 @@ def categorize_fields(metdat, keeplist=None, excludelist=None):
     varcats = {cat:[x for x in colnames if x.lower().split(cat)[0]==''] for cat in temp}
     
     varcats['speed'] = [x for x in varcats['speed'] if 'speed (' in x.lower()]
-    # varcats['dissipation rate'] = [x for x in varcats['dissipation rate'] if 'sf' not in x.lower()]
+    varcats['dissipation rate'] = [x for x in varcats['dissipation rate'] if 'sf' not in x.lower()]
     varcats['ti'] += [x for x in colnames if 'cup equivalent ti' in x.lower()]
     
     # units
@@ -266,59 +263,6 @@ def get_catinfo(metdat):
     catinfo['save'] = varsave
 
     return catinfo
-########################################### 
-
-########################################### 
-def fix_data_for_transfer(metdat):
-    """
-    Combined QC and filtering of 10-minute data for transfer to web server.
-    
-    parameters:
-    metdat (pandas dataframe)
-
-    outputs:
-    metdat (filtered pandas dataframe)
-    catinfo (dictionary)
-        contains all categorical information about 
-    """
-    ## get rid of columns that are 100% NaN
-    metdat = MET.drop_nan_cols(metdat)
-    # simply applies Pandas DataFrame method:
-    # metdat.dropna(axis=1,how='all', inplace=True)
-
-    keepcols = MET.categories_to_keep()
-    keepcols = [col for col in metdat.columns 
-                if col.split(' (')[0].lower() in keepcols 
-                if '.1' not in col]
-    dropcols = [col for col in metdat.columns if col not in keepcols]
-
-    metdat.drop(dropcols,axis=1,inplace=True)
-
-    metdat = MET.qc_mask(metdat)
-
-    ## flag data by stability class
-    stabconds, stabcat = MET.flag_stability(metdat)
-
-    ## group columns based on category, assign units, labels, savenames
-    varcats, varunits, varlabels, varsave = MET.categorize_fields(metdat, keeplist=True)
-
-    ## drop columns not in any of the categories, filter TI, temperature, stability parameters
-    MET.groom_data(metdat, varcats)
-
-    ## Finally, reject outliers more than 5 standard deviations from the mean
-    for col in metdat.columns:
-        try:
-            metdat[col] = MET.reject_outliers(metdat[col], m=6)
-        except:
-            continue
-
-    catinfo = {}
-    catinfo['columns'] = varcats
-    catinfo['units'] = varunits
-    catinfo['labels'] = varlabels
-    catinfo['save'] = varsave
-
-    return metdata, catinfo
 ########################################### 
 
 
@@ -377,11 +321,11 @@ def categories_to_keep():
                  # 'cov(u_w)',
                  # 'cov(w_t)',
                  'direction',
-                #  'dissipation rate',
+                 'dissipation rate',
                  'gradient richardson',
-                #  'integral length scale (u)',
-                #  'integral length scale (v)',
-                #  'integral length scale (w)',
+                 'integral length scale (u)',
+                 'integral length scale (v)',
+                 'integral length scale (w)',
                  # "mean(w't')",
                  # 'momentum flux',
                  'monin-obukhov length',

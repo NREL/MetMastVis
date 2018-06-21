@@ -11,7 +11,6 @@ from calendar import monthrange, month_name
 import datetime as dt
 import pickle as pkl
 
-
 ####################################
 # Data loading
 ####################################
@@ -23,7 +22,7 @@ def load_met_data(inputfiles, verbose=False):
         
     Parameters:
         1. inputfiles (list): All of the input files (.csv) to be loaded for analysis.
-        2. verbose (Boolean): Defines whether or not the name of the file should be printed as the function runs.
+        2. verbose (Boolean) [default: False]: Defines whether or not the name of the file should be printed as the function runs.
 
     Returns:
         1. metdat (Pandas DataFrame): Contains all of the requested data extracted from the input files.

@@ -63,8 +63,8 @@ def monthly_profile(metdat, catinfo, category=None, basecolor='cycle'):
     Parameters:
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
-        3. category (string): Specifies the category of information that is desired for plotting.
-        4. basecolor (string): Provides the color code information to get from "utils.py".
+        3. category (string) [default: None]: Specifies the category of information that is desired for plotting.
+        4. basecolor (string) [default: 'cycle']: Provides the color code information to get from "utils.py".
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -145,9 +145,9 @@ def monthly_stability_profiles(metdat, catinfo, category=None, vertloc=80, basec
     Parameters:
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
-        3. category (string): Specifies the category of information that is desired for plotting.
-        4. vertloc (integer, float): Describes the desired vertical location alond the tower for analysis.
-        5. basecolor (string): Provides the color code information to get from "utils.py".
+        3. category (string) [default: None]: Specifies the category of information that is desired for plotting.
+        4. vertloc (integer, float) [default: 80]: Describes the desired vertical location alond the tower for analysis.
+        5. basecolor (string) [default: 'span']: Provides the color code information to get from "utils.py".
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -232,8 +232,8 @@ def monthlyhourlyplot(metdat, catinfo, category=None, basecolor='span'):
     Parameters:
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
-        3. category (string): Specifies the category of information that is desired for plotting.
-        4. basecolor (string): Provides the color code information to get from "utils.py".
+        3. category (string) [default: None]: Specifies the category of information that is desired for plotting.
+        4. basecolor (string) [default: 'span']: Provides the color code information to get from "utils.py".
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -248,7 +248,7 @@ def monthlyhourlyplot(metdat, catinfo, category=None, basecolor='span'):
     colors = utils.get_colors(len(catinfo['columns'][category]), basecolor=basecolor, reverse=True)
     colnames, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category], reverse=True)
     
-    plotdat = metdat[colnames].groupby([metdat.index.month, metdat.index.hour]).mean()
+    plotdat = metdat[colnames].groupby([metdat.index.month.rename('month'), metdat.index.hour.rename('hour')]).mean()
     
     fig, ax = plt.subplots(4,3, figsize=(9,11), sharex=True, sharey=True)
     for iax in range(len(months)):
@@ -336,12 +336,12 @@ def monthly_rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector
     Parameters:
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
-        3. category (string): Specifies the category of information that is desired for plotting.
-        4. vertloc (integer, float): Describes the desired vertical location alond the tower for analysis.        
-        5. bins (integer, list): Indicates the number of equally spaced bins to divide the variable.
-        6. nsector (integer): Indicated the number of sector directions to divide the rose figure.
-        7. ylim (float): Provides the maximum value for the frequency of observations and is used to plot different roses with uniform limits.
-        8. noleg (Boolean): Determines whether or not there will be a legend to the figure.
+        3. category (string) [default: None]: Specifies the category of information that is desired for plotting.
+        4. vertloc (integer, float) [default: 80]: Describes the desired vertical location alond the tower for analysis.        
+        5. bins (integer, list) [default: 6]: Indicates the number of equally spaced bins to divide the variable.
+        6. nsector (integer) [default: 36]: Indicated the number of sector directions to divide the rose figure.
+        7. ylim (float) [default: None]: Provides the maximum value for the frequency of observations and is used to plot different roses with uniform limits.
+        8. noleg (Boolean) [default: False]: Determines whether or not there will be a legend to the figure.
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -465,7 +465,7 @@ def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='
     """
     
     stabconds = utils.get_stabconds()
-    colors = utils.get_colors(5,basecolor='span')
+    colors = utils.get_colors(len(stabconds),basecolor='span')
     nrelcolors = utils.get_nrelcolors()
 
      # Set up data
@@ -475,7 +475,7 @@ def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='
 
     # dirind = utils.get_nearest_direction(metdat[category])
     
-    fig, ax = plt.subplots(5,1, sharex=True, sharey=True, figsize=(6,8))
+    fig, ax = plt.subplots(len(stabconds),1, sharex=True, sharey=True, figsize=(6,8))
 
     plotdat = metdat.groupby(stabcol)
 
@@ -509,11 +509,11 @@ def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
         3. category (string): Specifies the category of information that is desired for plotting.
-        4. abscissa (string): independent variable to plot again
-        5. groupby (string): Describes which categories to group by.
-        6. nbins (integer): Divides the *groupby* variable into bins.
-        7. vertloc (integer, float): Describes the desired vertical location alond the tower for analysis.        
-        8. basecolor (string): Provides the color code information to get from "utils.py".
+        4. abscissa (string) [default: 'direction']: independent variable to plot again
+        5. groupby (string) [default: 'ti']: Describes which categories to group by.
+        6. nbins (integer) [default: 5]: Divides the *groupby* variable into bins.
+        7. vertloc (integer, float) [default: 80]: Describes the desired vertical location alond the tower for analysis.        
+        8. basecolor (string) [default: 'span']: Provides the color code information to get from "utils.py".
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -727,7 +727,7 @@ def monthly_stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
         3. category (string): Specifies the category of information that is desired for plotting.
-        4. vertloc (integer, float): Describes the desired vertical location alond the tower for analysis.        
+        4. vertloc (integer, float) [default: 80]: Describes the desired vertical location alond the tower for analysis.        
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -767,7 +767,6 @@ def monthly_stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
 
     return fig, ax#, leg
 
-
 def normalized_hist_by_stability(metdat, catinfo, vertloc=80):
     """**Get Normalized Stability Grouped Histogram Figure**.
 
@@ -776,7 +775,7 @@ def normalized_hist_by_stability(metdat, catinfo, vertloc=80):
     Parameters:
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
-        3. vertloc (integer, float): Describes the desired vertical location alond the tower for analysis.        
+        3. vertloc (integer, float) [default: 80]: Describes the desired vertical location alond the tower for analysis.        
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -797,13 +796,28 @@ def normalized_hist_by_stability(metdat, catinfo, vertloc=80):
 
     fig,ax = plt.subplots()
     for jj,cond in enumerate(stabconds):
-        
-        ax.bar(hours, garb.loc[cond], color=colors[jj], bottom=newbottom)
-        newbottom += garb.loc[cond]
+        # Use this for missing data, also works for full data
+        a = garb.loc[cond]
+        b = a.index.tolist()
+        c = a.values.tolist()
+        for i in range(len(hours)):
+            if (hours[i]) in b:
+                pass
+            else:
+                b.insert(i,hours[i])
+                c.insert(i,0)
+
+        d = pd.Series(data = c, index = b)
+        ax.bar(hours, d, color=colors[jj], bottom=newbottom)
+        newbottom += c  #<-- for if missing data, also works for full data 
+
+        #ax.bar(hours, garb.loc[cond], color=colors[jj], bottom=newbottom)
+        #newbottom += garb.loc[cond]
 
     ax.set_ylabel('Probability [%]')
     ax.set_xlabel('Time of Day [Hour]')
-    fig.legend(stabconds, loc=6, bbox_to_anchor=(1,0.5),framealpha=0)
+    fig.legend(stabconds)   
+    #fig.legend(stabconds, loc=6, bbox_to_anchor=(1,0.5),framealpha=0)
     fig.tight_layout()
 
     return fig, ax
@@ -816,7 +830,7 @@ def normalized_monthly_hist_by_stability(metdat, catinfo, vertloc=80):
     Parameters:
         1. metdat (Pandas DataFrame): The desired input data (Met Mast).
         2. catinfo (dictionary): Categorization information for the desired input data. Holds column names, labels, units, and save names.
-        3. vertloc (integer, float): Describes the desired vertical location alond the tower for analysis.        
+        3. vertloc (integer, float) [default: 80]: Describes the desired vertical location alond the tower for analysis.        
 
     Returns:
         1. fig (Matplotlib Figure): The figure object for the desired input data and categories.
@@ -830,7 +844,7 @@ def normalized_monthly_hist_by_stability(metdat, catinfo, vertloc=80):
     colors = utils.get_colors(5,basecolor='span')
 
     temp = metdat[stabcol].dropna()
-    plotdata = temp.groupby([temp.index.month, temp.index.hour]).value_counts(normalize=True)
+    plotdata = temp.groupby([temp.index.month.rename('month'), temp.index.hour.rename('hour')]).value_counts(normalize=True)
     plotdata.index.names = ['month','hour','stabclass']
     temp = plotdata.reorder_levels(['month','stabclass','hour'])
 

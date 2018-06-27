@@ -1,5 +1,5 @@
 <noinclude>
-    This is the '''{{BASEPAGENAME}}''' template.  It is used for the [[Wind for Schools Portal]] dashboard display.
+    This is the '''{{BASEPAGENAME}}''' template.  It is used for the [[Met Mast Portal]] dashboard display.
 
     ''It is not intended for any other use.''
 
@@ -8,17 +8,17 @@
 
     =====Usage=====
     It should be called in the following format:
-    <pre>
-    {{WFSPdashboard}}
-    </pre>
+    <pre>{{MetMastDashboard}}</pre>
 
-    [[Category:Wind for Schools]]
+    [[Category:Templates]]
+    [[Category:NWTC]]
+    [[Category:MetMast]]
 </noinclude>
 <includeonly>
-    <div class="metmast-dashboard-wrapper row">{{#vardefine:page|{{PAGENAME}}}}{{#ifeq:{{#var:page}}|Wind for Schools Portal|
+    <div class="metmast-dashboard-wrapper row">{{#vardefine:page|{{PAGENAME}}}}{{#ifeq:{{#var:page}}|NWTC Met Mast Portal|
         <h2 class="col-xs-12">Wind for Schools Dashboard</h2>
         <div class="metmast-dashboard-header col-xs-12">
-        <span>Welcome to the Wind for Schools Portal!  The dashboard is currently displaying data from all small wind turbines installed at K-12 schools.</span>
+        <span>Welcome to the National Wind Technology Center's Met Mast Portal! The dashboard is currently displaying data from all small wind turbines installed at K-12 schools.</span>
     </div>
     <div class="metmast-dashboard-cluster">
         <div class="metmast-dashboard-gauge education col-xs-6 col-sm-4">

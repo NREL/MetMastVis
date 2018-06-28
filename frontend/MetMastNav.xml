@@ -1,0 +1,61 @@
+<noinclude>
+    This is the '''{{BASEPAGENAME}}''' template.  It is used for the [[Mat Mast Portal]] navigation.
+
+    ''It is not intended for any other use.''
+
+    =====Parameters=====
+    * None
+
+    =====Usage=====
+    It should be called in the following format at the top of the page:
+    <pre>
+    {{MetMastNav}}
+    </pre>
+
+    Edit the page to see the template text.
+    [[Category:Templates|{{BASEPAGENAME}}]]
+    [[Category:Navigation Templates|{{BASEPAGENAME}}]]
+    [[Category:NWTC]]
+    [[Category:Met Mast Portal]]
+</noinclude><includeonly>
+<div class="mm-header">__NOTOC__ {{#Widget:MetMast-Nav}}[[Category:Met Mast Portal]]
+	<div class="mm-nav">    
+		[[Wind for Schools Portal|<span class="mm-icon"></span><span class="mm-title">Wind for Schools</span>]]<span class="right">[[Wind for Schools Portal|<span class="mm-nav-link"><i class="fa fa-paper-plane" aria-hidden="true"></i><span class="mm-menu-text">Home</span></span>]][[Wind for Schools Portal/Comparison|<span class="mm-nav-link"><i class="fa fa-clone" aria-hidden="true"></i><span class="mm-menu-text">Compare</span></span>]][[Wind_for_Schools_Portal/Curricula|<span class="mm-nav-link"><i class="fa fa-book" aria-hidden="true"></i><span class="mm-menu-text">Curricula</span></span>]]<span class="mm-nav-link" id="menuToggle"><i class="fa fa-ellipsis-v" aria-hidden="true"></i>Menu</span></span>
+	</div>
+	<div class="mm-menu row">
+		<div class="col-xs-12">
+			<h3><i class="fa fa-play-circle-o" aria-hidden="true"></i>Getting Started</h3>
+			<ul class="row">
+				<li class="col-xs-6 col-sm-4 col-md-2 wfs-menu-link-wrapper">[[Wind_for_Schools_Portal/Funding_Spreadsheet|Fund a New Turbine]]</li>
+				<li class="col-xs-6 col-sm-4 col-md-2 wfs-menu-link-wrapper">[[Wind_for_Schools_Portal/Turbine_Support|Add Your Turbine to OpenEI]]</li>
+				<li class="col-xs-6 col-sm-4 col-md-2 wfs-menu-link-wrapper">[[Wind_for_Schools_Portal/Best_Practices_in_the_Development_and_Sustainability_of_School_Wind_Projects|Best Practices]]</li>
+			</ul>
+		</div>
+		<div class="col-xs-12">
+			<h3><i class="fa fa-database" aria-hidden="true"></i>Turbine Data</h3>
+			<ul class="row">
+				<li class="col-xs-6 col-sm-4 col-md-2 wfs-menu-link-wrapper">[[Wind for Schools Portal/Comparison|Compare Turbine Data]]</li>
+			</ul>
+		</div>
+		<div class="col-xs-12">
+			<h3><i class="fa fa-code" aria-hidden="true"></i>Technical Resources</h3>
+			<ul class="row">
+				<li class="col-xs-6 col-sm-4 col-md-2 wfs-menu-link-wrapper">[[Wind_for_Schools_Portal/Turbine_Support|How to Share Data]]</li>
+				<li class="col-xs-6 col-sm-4 col-md-2 wfs-menu-link-wrapper">[[Wind_for_Schools_Portal/Troubleshooting|Troubleshooting]]</li>
+				<li class="col-xs-6 col-sm-4 col-md-2 wfs-menu-link-wrapper">[[Wind_for_Schools_Portal/Developer_Resources|Developer Resources]]</li>
+			</ul>
+		</div>
+		<div class="col-xs-12 col-sm-6 col-lg-3 col-lg-offset-2">
+			<h3><i class="fa fa-envelope-o" aria-hidden="true"></i>Contact</h3>
+			<ul class="row">
+				<li class="col-xs-12">{{#Widget:SafeEmail|email=Ruth.Baranowski@nrel.gov|text=Email Us}}</li>
+			</ul>
+		</div>
+		<div class="col-xs-12 col-sm-6 col-lg-3 col-lg-offset-2">
+			<h3><i class="fa fa-globe" aria-hidden="true"></i>Careers</h3>
+			<ul class="row">
+				<li class="col-xs-12">[[Wind_for_Schools_Portal/Careers_in_the_Wind_Industry|Learn More]]</li>
+			</ul>
+		</div>
+	</div>
+</div></includeonly>

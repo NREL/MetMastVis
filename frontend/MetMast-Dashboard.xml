@@ -1,0 +1,24 @@
+<noinclude>This widget helps with the Met Mast Portal Dashboard content.
+
+<pre>
+{{#Widget:MetMast-Dashboard}}
+</pre>
+
+[[Category:Widgets]]
+[[Category:NWTC]]
+[[Category:MetMast]]
+
+</noinclude>
+<includeonly><!--Widget:MetMast-Dashboard-->
+<style>
+
+MetMast-Dashboard.css goes here
+
+</style>
+
+<script>
+
+MetMast-Dashboard.js goes here
+
+</script>
+</includeonly>

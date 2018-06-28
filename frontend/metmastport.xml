@@ -1,0 +1,38 @@
+{{MetMastDashboard}}
+<div class="row">
+    <div class="col-xs-12 turbine-table table-responsive table-mask">
+        <table id="sort-table" class="table table-hover">
+            {{#arraydefine:schools|{{#ask: [[Category:Wind for Schools Project]][[WFSPTurbineID::+]]|?WFSPTurbineID|?Place|limit=2500|format=array|sep=<SEP>}}|<SEP>|unique,print=}}
+            {{#arrayprint:schools||@@@|{{#arraydefine:schoolResult|@@@|<PROP>|}}<tr data-id="{{#arrayindex:schoolResult|1}}"><td data-id="{{#arrayindex:schoolResult|1}}" data-place="{{#arrayindex:schoolResult|2}}">[[{{#arrayindex:schoolResult|0}}]]</td><td>{{#arrayindex:schoolResult|2}}</td></tr>|}}
+        </table>
+    </div>
+    <div class="table-footer col-xs-12">
+        <span class="expand-tab">Expand Table</span>
+        <span class="btn btn-wfsp-secondary right" data-toggle="modal" data-target="#wfspDownload" style="font-size:16px;"><i class="fa fa-cloud-download" aria-hidden="true"></i> Download Data</span>
+    </div>
+</div>
+
+<!-- download modal -->
+{{#Widget:WFSP-DownloadModal}}
+
+<!--Wind for Schools Turbine Map-->
+<b>{{#var:schoolCount}}</b> School Projects.  Pan or Zoom the map to the desired area.  Click on a map marker to view the school project name and options for visiting or comparing that school project.
+{{#ask:[[Category:Wind for Schools Project]][[WFSPTurbineID::+]]
+|?Coordinates
+|?WFSPTurbineID
+|?InstalledCapacity#
+|limit=2500
+|format=googlemaps
+|forceshow=on
+|width=100%
+|height=600px
+|zoom=4
+|template=Wind_for_Schools_Portal_Map
+|markercluster=no
+|showtitle=no
+|icon=Windturbine.png
+}}
+{{PageMeta
+ |description=Wind For Schools collects data from wind turbines through partnerships with schools and universities.
+ |keywords=Wind For Schools, School, Wind, Energy, Community Wind, Wind Turbine
+}}

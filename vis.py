@@ -641,7 +641,7 @@ def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=False, bin
 ###########################################   
 
 ###########################################
-def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red'):
+def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9), gamma=-0.5):
 ###########################################
     """
     Fit a skewed Gaussian distribution to wind speed data
@@ -668,7 +668,7 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red'):
     model = SkewedGaussianModel()
 
     # set initial parameter values
-    params = model.make_params(amplitude=10, center=data.mean(), sigma=data.std(), gamma=-0.5)
+    params = model.make_params(amplitude=10, center=data.mean(), sigma=data.std(), gamma=gamma)
 
     # adjust parameters  to best fit data.
     result = model.fit(yvals, params, x=xvals)
@@ -683,13 +683,20 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red'):
         amp = np.round(result.params['amplitude'].value,2)
 
         if gamma > 0:
-            xcoord = 0.7
+            xcoord = 0.95
         else:
-            xcoord=0.05
-        ax.annotate(s=r'$A = {}$'.format(str(amp)), xy=(xcoord,0.9), xycoords='axes fraction')
-        ax.annotate(s=r'$\mu = {}$'.format(str(center)), xy=(xcoord,0.8), xycoords='axes fraction')
-        ax.annotate(s=r'$\gamma = {}$'.format(str(gamma)), xy=(xcoord,0.7), xycoords='axes fraction')
-        ax.annotate(s=r'$\sigma = {}$'.format(str(sigma)), xy=(xcoord,0.6), xycoords='axes fraction')
+            xcoord = 0.05
+        if xy[0] > 1:
+            xcoord=0    
+
+        xy = (xcoord+xy[0], xy[1])
+        ax.annotate(s='$A = {}$\n$\mu = {}$\n$\gamma = {}$\n$\sigma = {}$'.format(amp,center,gamma,sigma), 
+            xy=xy, xycoords='axes fraction', ha='right', va='top')
+
+        # ax.annotate(s=r'$A = {}$'.format(str(amp)), xy=(xcoord,0.9), xycoords='axes fraction')
+        # ax.annotate(s=r'$\mu = {}$'.format(str(center)), xy=(xcoord,0.8), xycoords='axes fraction')
+        # ax.annotate(s=r'$\gamma = {}$'.format(str(gamma)), xy=(xcoord,0.7), xycoords='axes fraction')
+        # ax.annotate(s=r'$\sigma = {}$'.format(str(sigma)), xy=(xcoord,0.6), xycoords='axes fraction')
 
 
 
@@ -697,7 +704,7 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red'):
 ###########################################
 
 ###########################################
-def fit_weibull(data, ax, labels=True, basecolor='red'):
+def fit_weibull(data, ax, labels=True, basecolor='red', xy=(0.95,0.9)):
 ###########################################
     """
     Fit a weibull distribution to wind speed data
@@ -734,8 +741,7 @@ def fit_weibull(data, ax, labels=True, basecolor='red'):
     if labels is True:
         shape = fitparams[1].round(2)
         scale = fitparams[3].round(2)
-        ax.annotate(s='shape = {}'.format(str(shape)), xy=(0.95,0.9), xycoords='axes fraction', horizontalalignment='right')
-        ax.annotate(s='scale = {}'.format(str(scale)), xy=(0.95,0.8), xycoords='axes fraction', horizontalalignment='right') 
+        ax.annotate(s='shape = {}\nscale = {}\nN = {}'.format(shape,scale,len(data)), xy=xy, xycoords='axes fraction', ha='right', va='top')
 
     ax.set_xlim(left = -1, right=xmax)
 

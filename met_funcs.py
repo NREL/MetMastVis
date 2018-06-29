@@ -8,6 +8,7 @@ from calendar import monthrange, month_name
 import datetime as dt
 import pickle as pkl
 
+import utils
 
 ####################################
 # Data loading
@@ -196,6 +197,52 @@ def reject_outliers(data, m=5):
     return data[abs(data - np.mean(data)) < m * np.std(data)]
 ###########################################
 
+###########################################
+def fix_pressure_data(metdat, catinfo):
+    """
+    Bad pressure data correction 
+    
+    There is a period of data for which the pressure signals are 
+    not to be trusted It appears that there was a poor calibration 
+    between two periods of downtime. Data has been correted by 
+    adding an offset to that range of data. The offset is equal to
+    the difference between the mean value of the bad data and the mean
+    value of the annual average over that period.
+
+    Parameters:
+    metdat, pandas dataframe: contains all of the relevant met mast timeseries data
+    catinfo, dict: contains all of the categorical information for data channels in metdat
+    """
+    pcols, pheights, _= utils.get_vertical_locations(catinfo['columns']['air pressure'])
+    metdat.sort_index(inplace=True)
+
+    for pcol in pcols:
+        # pressure data
+        pdat = metdat[pcol].copy()
+        # find start and stop times of bad data
+        timediff = np.abs(np.diff(pdat.index.values))
+        temp = timediff.copy()
+        temp.sort()
+        limits = [np.where(timediff==temp[-1])[0][0], np.where(timediff==temp[-2])[0][0]]
+        # extract bad data
+        limdates = metdat.index.values[limits]
+        bdat = pdat.iloc[limits[0]+1:limits[1]].copy()
+        # good data is outside of that range
+        gdat = pdat[(pdat.index<pdat.index[limits[0]]) | (pdat.index>=pdat.index[limits[1]])].copy()
+        # average value of pressure for that day of year
+        dayofyearaverage = gdat.groupby(gdat.index.dayofyear).mean()
+        # correction is just the difference of mean values
+        pressure_correction = dayofyearaverage.values[bdat.index.dayofyear].mean()-bdat.mean()
+        # corrected data
+        # cdat = bdat+(dayofyearaverage.values[bdat.index.dayofyear].mean()-bdat.mean())
+
+        # # metdat[col].iloc[limits[0]+1:limits[1]] = cdat
+
+        metdat.loc[((metdat.index>limdates[0]) & (metdat.index<limdates[1])), pcol] += \
+                (dayofyearaverage.values[bdat.index.dayofyear].mean()-bdat.mean())
+
+    return metdat
+###########################################
 
 ###########################################
 # Data organization
@@ -282,11 +329,11 @@ def fix_data_for_transfer(metdat):
         contains all categorical information about 
     """
     ## get rid of columns that are 100% NaN
-    metdat = MET.drop_nan_cols(metdat)
+    metdat = drop_nan_cols(metdat)
     # simply applies Pandas DataFrame method:
     # metdat.dropna(axis=1,how='all', inplace=True)
 
-    keepcols = MET.categories_to_keep()
+    keepcols = categories_to_keep()
     keepcols = [col for col in metdat.columns 
                 if col.split(' (')[0].lower() in keepcols 
                 if '.1' not in col]
@@ -294,21 +341,21 @@ def fix_data_for_transfer(metdat):
 
     metdat.drop(dropcols,axis=1,inplace=True)
 
-    metdat = MET.qc_mask(metdat)
+    metdat = qc_mask(metdat)
 
     ## flag data by stability class
-    stabconds, stabcat = MET.flag_stability(metdat)
+    stabconds, stabcat = flag_stability(metdat)
 
     ## group columns based on category, assign units, labels, savenames
-    varcats, varunits, varlabels, varsave = MET.categorize_fields(metdat, keeplist=True)
+    varcats, varunits, varlabels, varsave = categorize_fields(metdat, keeplist=True)
 
     ## drop columns not in any of the categories, filter TI, temperature, stability parameters
-    MET.groom_data(metdat, varcats)
+    groom_data(metdat, varcats)
 
     ## Finally, reject outliers more than 5 standard deviations from the mean
     for col in metdat.columns:
         try:
-            metdat[col] = MET.reject_outliers(metdat[col], m=6)
+            metdat[col] = reject_outliers(metdat[col], m=6)
         except:
             continue
 
@@ -318,7 +365,9 @@ def fix_data_for_transfer(metdat):
     catinfo['labels'] = varlabels
     catinfo['save'] = varsave
 
-    return metdata, catinfo
+    metdat = fix_pressure_data(metdat, catinfo)
+
+    return metdat, catinfo
 ########################################### 
 
 

@@ -12,6 +12,9 @@ from colour import Color
 from windrose import WindroseAxes
 import numpy as np
 import pandas as pd
+from scipy import stats
+from lmfit.models import SkewedGaussianModel
+
 
 plt.rc('font', family='serif')
 plt.rc('font', size=12)
@@ -589,7 +592,7 @@ def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti
 ###########################################
 
 ###########################################
-def hist(metdat, catinfo, category, vertloc=80, basecolor='blue'):
+def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=False, bins=35, labels=True):
 ###########################################
     """
     Histogram of a given field without any sorting.
@@ -615,21 +618,131 @@ def hist(metdat, catinfo, category, vertloc=80, basecolor='blue'):
     data = metdat[varcol].dropna(how='any')
 
     fig, ax = plt.subplots(figsize=(5,3))
-    ax.hist(data, 
-            bins = 35, 
-            facecolor=color, 
-            edgecolor='k',
-            weights=np.ones(len(data)) / len(data), density=False)
+    n,histbins,patches = ax.hist(data, 
+                                    bins = bins, 
+                                    facecolor=color, 
+                                    edgecolor='k',
+                                    weights=np.ones(len(data)) / len(data), density=False)
+    
+    if fit is 'Weibull':
+        fit_weibull(data,ax)
+
+    elif fit is 'skewedgaussian':
+        fit_skewedgaussian(data, histbins, ax)
+
+
     ax.set_title(r'$z={}$ m'.format(vertloc))
     fig.text(0,0.5,'Frequency [%]',rotation='vertical', ha='center', va='center')
     fig.text(0.5,0,catinfo['labels'][category], ha='center', va='center')
+
     fig.tight_layout()
-    
+
     return fig, ax
 ###########################################   
 
 ###########################################
-def monthly_hist(metdat, catinfo, category, vertloc=80, basecolor='blue'):
+def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red'):
+###########################################
+    """
+    Fit a skewed Gaussian distribution to wind speed data
+    paramters:
+    data - input wind speed data to fit
+    ax - axis to plot onto
+    bins - x locations of bins from histogram
+    """
+
+    colors = utils.get_nrelcolors()
+
+    if basecolor == 'red':
+        pcolor = colors['red'][1]
+    elif basecolor is 'blue':
+        pcolor = colors['blue'][0]
+    else:
+        pcolor = 'k'
+
+    # get x and y data
+    yvals, xvals = np.histogram(data, bins=bins)
+    # center x values
+    xvals = np.array([(xvals[i]+xvals[i+1])/2 for i in range(len(xvals)-1)])
+
+    model = SkewedGaussianModel()
+
+    # set initial parameter values
+    params = model.make_params(amplitude=10, center=data.mean(), sigma=data.std(), gamma=-0.5)
+
+    # adjust parameters  to best fit data.
+    result = model.fit(yvals, params, x=xvals)
+    fitdat = result.best_fit / len(data)
+
+    ax.plot(xvals, result.best_fit* 1.0/float(len(data)), color=pcolor, linewidth=2.5) 
+    if labels is True:
+        
+        gamma = np.round(result.params['gamma'].value,2)
+        sigma = np.round(result.params['sigma'].value,2)
+        center = np.round(result.params['center'].value,2)
+        amp = np.round(result.params['amplitude'].value,2)
+
+        if gamma > 0:
+            xcoord = 0.7
+        else:
+            xcoord=0.05
+        ax.annotate(s=r'$A = {}$'.format(str(amp)), xy=(xcoord,0.9), xycoords='axes fraction')
+        ax.annotate(s=r'$\mu = {}$'.format(str(center)), xy=(xcoord,0.8), xycoords='axes fraction')
+        ax.annotate(s=r'$\gamma = {}$'.format(str(gamma)), xy=(xcoord,0.7), xycoords='axes fraction')
+        ax.annotate(s=r'$\sigma = {}$'.format(str(sigma)), xy=(xcoord,0.6), xycoords='axes fraction')
+
+
+
+
+###########################################
+
+###########################################
+def fit_weibull(data, ax, labels=True, basecolor='red'):
+###########################################
+    """
+    Fit a weibull distribution to wind speed data
+    paramters:
+    data - input wind speed data to fit
+    ax - axis to plot onto
+    bins - x locations of bins from histogram
+    """
+
+    colors = utils.get_nrelcolors()
+
+    if basecolor == 'red':
+        pcolor = colors['red'][1]
+    elif basecolor is 'blue':
+        pcolor = colors['blue'][0]
+    else:
+        pcolor = 'k'
+
+    # get limiting value (~1)
+    fixpt = 1.0-np.finfo(float).eps
+    
+    # get x values along axis
+    xmin, xmax = data.min(), data.max() 
+    xdata = np.linspace(xmin, xmax, len(data))
+    
+    # fit a weibull distribution 
+    # floc=0 keeps the location fixed at zero, 
+    # f0=1 keeps the first shape parameter of the exponential weibull fixed at 1
+    fitparams = stats.exponweib.fit(data, floc=0, f0=fixpt)
+    fitdat = stats.exponweib.pdf(xdata, *fitparams) # now get theoretical values in our interval  
+    
+    # add fit to plot and annotate
+    ax.plot(xdata, fitdat, label="Weib", color=pcolor)
+    if labels is True:
+        shape = fitparams[1].round(2)
+        scale = fitparams[3].round(2)
+        ax.annotate(s='shape = {}'.format(str(shape)), xy=(0.95,0.9), xycoords='axes fraction', horizontalalignment='right')
+        ax.annotate(s='scale = {}'.format(str(scale)), xy=(0.95,0.8), xycoords='axes fraction', horizontalalignment='right') 
+
+    ax.set_xlim(left = -1, right=xmax)
+
+###########################################
+
+###########################################
+def monthly_hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=False):
 ###########################################
     """
     Histogram of a given field without any sorting.
@@ -664,13 +777,15 @@ def monthly_hist(metdat, catinfo, category, vertloc=80, basecolor='blue'):
     
     for im,month in enumerate(months):
         data = temp.get_group(im+1).dropna()
-        ax.flatten()[im].hist(data, 
+        n,histbins,patches = ax.flatten()[im].hist(data, 
                               bins=bins, 
                               color=color, 
                               edgecolor='k',
-                              weights=np.ones(len(data))/len(data)*100)
+                              weights=np.ones(len(data))/len(data))
         ax.flatten()[im].set_title(month, fontsize=12)
-        
+        if fit is 'Weibull':
+            fit_weibull(data, ax.flatten()[im])
+
     fig.tight_layout()
     fig.text(0,0.5,'Frequency [%]',rotation='vertical', ha='center', va='center')
     fig.text(0.5,0,catinfo['labels'][category], ha='center', va='center')

@@ -131,7 +131,7 @@ def get_colors(ncolors, basecolor='cycle', reverse=False):
             del colors[2]
         
     elif basecolor is 'span':
-        colors = [nrelcolors['blue'][0], '#D1D5D8', nrelcolors['red'][0]]
+        colors = [nrelcolors['blue'][0], '#a1a5a7', nrelcolors['red'][0]]
         cdict = polylinear_gradient(colors,ncolors+2)
         colors = cdict['hex']
         

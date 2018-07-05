@@ -449,7 +449,7 @@ def categories_to_keep():
 ###########################################
 def get_units():
     units = {'density': r'[kg/m$^3$]',
-             'pressure': r'[mmHg]',
+             'pressure': r'[mbar]',
              'temperature': r'[$^\circ C$]',
              'tke':r'[m$^2$/s$^2$]',
              'direction': r'[$^\circ$]',

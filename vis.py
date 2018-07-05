@@ -13,7 +13,7 @@ from windrose import WindroseAxes
 import numpy as np
 import pandas as pd
 from scipy import stats
-from lmfit.models import SkewedGaussianModel
+import lmfit.models as lmfmodels # import SkewedGaussianModel
 
 
 plt.rc('font', family='serif')
@@ -97,7 +97,7 @@ def monthly_profile(metdat, catinfo, category=None, basecolor='cycle'):
 ###########################################
 
 ###########################################
-def stability_profile(metdat, catinfo, category=None, vertloc=80, basecolor='cycle'):
+def stability_profile(metdat, catinfo, category=None, vertloc=80, basecolor='span'):
 ###########################################
     """
     Plot cumulative average profiles sorted by stability.
@@ -168,7 +168,7 @@ def monthly_stability_profiles(metdat, catinfo, category=None, vertloc=80, basec
     stab, stabloc, ind = utils.get_vertical_locations(catinfo['columns']['stability flag'], location=vertloc)
 
     plotdat = metdat.groupby([metdat.index.month, stab])
-    colors = utils.get_colors(5,basecolor='span')
+    colors = utils.get_colors(5,basecolor=basecolor)
     months = utils.monthnames()
     stabconds = utils.get_stabconds()
 
@@ -221,7 +221,7 @@ def hourlyplot(metdat, catinfo, category=None, basecolor='span'):
     
     plotdat = metdat[colnames].groupby(metdat.index.hour).mean()
     
-    fig, ax = plt.subplots(figsize=(5,3.5), sharex=True, sharey=True)
+    fig, ax = plt.subplots(figsize=(5,3), sharex=True, sharey=True)
     for iax in range(len(colnames)):
         ax.plot(plotdat[colnames[iax]], color=colors[iax])
 
@@ -472,7 +472,7 @@ def winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', excl
 
     for ii in range(len(exclude_angles)):
         ax.axvspan(exclude_angles[ii][0], exclude_angles[ii][1], alpha=0.1, color=colors[basecolor][0])
-    ax.set_title(r'$z={}$ m'.format(vertloc))
+    # ax.set_title(r'$z={}$ m'.format(vertloc))
     ax.set_xlabel(r'Wind Direction [$^\circ$]')
     ax.set_ylabel(catinfo['labels'][category])
     
@@ -528,8 +528,8 @@ def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='
         for ii in range(len(exclude_angles)):
              ax.flatten()[ind].axvspan(exclude_angles[ii][0], exclude_angles[ii][1], alpha=0.1, color=nrelcolors[basecolor][0])
 
-        if ind == 0:
-             ax.flatten()[ind].set_title(r'$z={}$ m'.format(vertloc))
+        # if ind == 0:
+        #      ax.flatten()[ind].set_title(r'$z={}$ m'.format(vertloc))
     
     
     fig.tight_layout()
@@ -584,7 +584,7 @@ def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti
     # labels
     ax.set_xlabel(catinfo['labels'][abscissa])
     ax.set_ylabel(catinfo['labels'][category])  
-    ax.set_title(r'$z={}$ m'.format(vertloc))
+    # ax.set_title(r'$z={}$ m'.format(vertloc))
 
     fig.tight_layout()
     
@@ -592,7 +592,7 @@ def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti
 ###########################################
 
 ###########################################
-def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=False, bins=35, labels=True):
+def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', title=False, fit=False, bins=35, labels=True):
 ###########################################
     """
     Histogram of a given field without any sorting.
@@ -624,14 +624,17 @@ def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=False, bin
                                     edgecolor='k',
                                     weights=np.ones(len(data)) / len(data), density=False)
     
-    if fit is 'Weibull':
-        fit_weibull(data,ax)
+    if fit is 'weibull':
+        fit_weibull(data, ax)
+
+    elif fit is 'gaussian':
+        fit_gaussian(data, histbins, ax)
 
     elif fit is 'skewedgaussian':
         fit_skewedgaussian(data, histbins, ax)
 
-
-    ax.set_title(r'$z={}$ m'.format(vertloc))
+    if title:
+        ax.set_title(r'$z={}$ m'.format(vertloc))
     fig.text(0,0.5,'Frequency [%]',rotation='vertical', ha='center', va='center')
     fig.text(0.5,0,catinfo['labels'][category], ha='center', va='center')
 
@@ -665,7 +668,7 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9),
     # center x values
     xvals = np.array([(xvals[i]+xvals[i+1])/2 for i in range(len(xvals)-1)])
 
-    model = SkewedGaussianModel()
+    model = lmfmodels.SkewedGaussianModel()
 
     # set initial parameter values
     params = model.make_params(amplitude=10, center=data.mean(), sigma=data.std(), gamma=gamma)
@@ -684,6 +687,64 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9),
 
         if gamma > 0:
             xcoord = 0.95
+            align='right'
+        else:
+            xcoord = 0.05
+            align='left'
+        if xy[0] > 1:
+            xcoord=0  
+            align='right'  
+
+        xy = (xcoord+xy[0], xy[1])
+        ax.annotate(s='$A = {}$\n$\mu = {}$\n$\gamma = {}$\n$\sigma = {}$'.format(amp,center,gamma,sigma), 
+            xy=xy, xycoords='axes fraction', ha=align, va='top')
+###########################################
+
+
+###########################################
+def fit_gaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9), gamma=-0.5):
+###########################################
+    """
+    Fit a Gaussian distribution to wind speed data
+    paramters:
+    data - input wind speed data to fit
+    ax - axis to plot onto
+    bins - x locations of bins from histogram
+    """
+
+    colors = utils.get_nrelcolors()
+
+    if basecolor == 'red':
+        pcolor = colors['red'][1]
+    elif basecolor is 'blue':
+        pcolor = colors['blue'][0]
+    else:
+        pcolor = 'k'
+
+    # get x and y data
+    yvals, xvals = np.histogram(data, bins=bins)
+    # center x values
+    xvals = np.array([(xvals[i]+xvals[i+1])/2 for i in range(len(xvals)-1)])
+
+    model = lmfmodels.GaussianModel()
+
+    # set initial parameter values
+    params = model.make_params(amplitude=10, center=data.mean(), sigma=data.std(), gamma=gamma)
+
+    # adjust parameters  to best fit data.
+    result = model.fit(yvals, params, x=xvals)
+    fitdat = result.best_fit / len(data)
+
+    ax.plot(xvals, result.best_fit* 1.0/float(len(data)), color=pcolor, linewidth=2.5) 
+    if labels is True:
+        
+        # gamma = np.round(result.params['gamma'].value,2)
+        sigma = np.round(result.params['sigma'].value,2)
+        center = np.round(result.params['center'].value,2)
+        amp = np.round(result.params['amplitude'].value,2)
+
+        if gamma > 0:
+            xcoord = 0.95
         else:
             xcoord = 0.05
         if xy[0] > 1:
@@ -692,14 +753,6 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9),
         xy = (xcoord+xy[0], xy[1])
         ax.annotate(s='$A = {}$\n$\mu = {}$\n$\gamma = {}$\n$\sigma = {}$'.format(amp,center,gamma,sigma), 
             xy=xy, xycoords='axes fraction', ha='right', va='top')
-
-        # ax.annotate(s=r'$A = {}$'.format(str(amp)), xy=(xcoord,0.9), xycoords='axes fraction')
-        # ax.annotate(s=r'$\mu = {}$'.format(str(center)), xy=(xcoord,0.8), xycoords='axes fraction')
-        # ax.annotate(s=r'$\gamma = {}$'.format(str(gamma)), xy=(xcoord,0.7), xycoords='axes fraction')
-        # ax.annotate(s=r'$\sigma = {}$'.format(str(sigma)), xy=(xcoord,0.6), xycoords='axes fraction')
-
-
-
 
 ###########################################
 
@@ -869,7 +922,7 @@ def stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
 
     plotdat = metdat.groupby(stabcol)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5,3))
     temp = pd.DataFrame({cond: plotdat[varcol].get_group(cond) for cond in stabconds})
     temp.plot.hist(ax=ax,
                    stacked=True,
@@ -881,7 +934,7 @@ def stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
                    density=True)
     
     ax.set_xlabel(catinfo['labels'][category])
-    ax.set_title(r'$z={}$m'.format(vertloc))
+    # ax.set_title(r'$z={}$m'.format(vertloc))
     fig.legend(stabconds, loc=6, bbox_to_anchor=(1, 0.5), frameon=False)
     
     fig.tight_layout()
@@ -967,7 +1020,7 @@ def normalized_hist_by_stability(metdat, catinfo, vertloc=80):
     hours = np.arange(24)
     newbottom = np.zeros(24)
 
-    fig,ax = plt.subplots()
+    fig,ax = plt.subplots(figsize=(5,3))
     for jj,cond in enumerate(stabconds):
         
         ax.bar(hours, garb.loc[cond], color=colors[jj], bottom=newbottom)
@@ -1018,10 +1071,9 @@ def normalized_monthly_hist_by_stability(metdat, catinfo, vertloc=80):
         for jj,cond in enumerate(stabconds):
             
             pdat = temp.loc[ii+1,cond]
-            
             ax.flatten()[ii].bar(hours, pdat, color=colors[jj],bottom=newbottom)
-            
             newbottom += pdat
+            ax.flatten()[ii].set_title(month)
             
     # fig.legend(stabconds, loc=8, bbox_to_anchor=(0, -0.1), edgecolor='w')
     fig.text(-0.02,0.58, 'Probability [%]', ha='center', va='center', rotation='vertical')

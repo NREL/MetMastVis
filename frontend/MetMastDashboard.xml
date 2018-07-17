@@ -15,94 +15,11 @@
     [[Category:MetMast]]
 </noinclude>
 <includeonly>
-    <div class="metmast-dashboard-wrapper row">{{#vardefine:page|{{PAGENAME}}}}{{#ifeq:{{#var:page}}|NWTC Met Mast Portal|
-        <h2 class="col-xs-12">Wind for Schools Dashboard</h2>
+    <div class="metmast-dashboard-wrapper row">{{#vardefine:page|{{PAGENAME}}}}
+        {{#ifeq:{{#var:page}}|NWTC Met Mast Portal|
+        <h2 class="col-xs-12">NWTC Meteorological Mast Data</h2>
         <div class="metmast-dashboard-header col-xs-12">
-        <span>Welcome to the National Wind Technology Center's Met Mast Portal! The dashboard is currently displaying data from all small wind turbines installed at K-12 schools.</span>
-    </div>
-    <div class="metmast-dashboard-cluster">
-        <div class="metmast-dashboard-gauge education col-xs-6 col-sm-4">
-            <div class="row">
-                <span class="metmast-dashboard-icon col-xs-12 col-sm-6"><div class="a-plus-icon"></div></span>
-                <span class="metmast-dashboard-data metmast-dashboard-data-curricula col-xs-12 col-sm-6">
-                    <p class="content-detail">[[Wind_for_Schools_Portal/K-3_Curricula|K-3]][[Wind_for_Schools_Portal/4-6_Curricula|4-6]]</p>
-                    <p class="content-detail">[[Wind_for_Schools_Portal/7-8_Curricula|7-8]][[Wind_for_Schools_Portal/9-12_Curricula|9-12]]</p>
-                    <p class="content-detail">[[Wind_for_Schools_Portal/College_Curricula|College]]</p>
-                </span>
-                [[Wind_for_Schools_Portal_Curricula|
-                <span class="metmast-dashboard-label col-xs-12">Lesson Plans and Curricula 
-                    <span class="btn-caret pull-right"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i></span>
-                </span>
-                ]]
-            </div>
-        </div><!-- close metmast-dashboard-gauge -->
-        <div class="metmast-dashboard-gauge status col-xs-6 col-sm-4">
-            <div class="row">
-                <span class="metmast-dashboard-icon col-xs-12 col-sm-6"><i class="fa fa-heartbeat" aria-hidden="true"></i></span>
-                <span class="metmast-dashboard-data col-xs-12 col-sm-6">
-                    <p class="content-detail"><span id="turbineCount"></span> Registered</p>
-                    <p class="content-detail"><span id="runningCount"></span> Reporting</p>
-                    <p class="content-detail">{{#vardefineecho:schoolCount|{{#ask:[[Category:Wind for Schools Project]][[WFSPTurbineID::+]]|format=count}}}} Schools</p>
-                </span>
-                <span class="metmast-dashboard-label col-xs-12">Overall Status</span>
-            </div>
-        </div><!-- close metmast-dashboard-gauge -->
-        <div class="metmast-dashboard-gauge energy col-xs-12 col-sm-4">
-            <div class="row">
-                <span class="metmast-dashboard-icon col-xs-4"><i class="fa fa-bolt" aria-hidden="true"></i></span>
-                <span class="metmast-dashboard-data col-xs-8"><p><b id="totalEnergy"></b> total kWh</p><p id="analogy">That's enough energy to play video continuously on a smartphone for <b id="videoPlayback"></b> years!</p></span>
-                <span class="metmast-dashboard-label col-xs-12">since 2008</span>
-            </div>
-        </div><!-- close metmast-dashboard-gauge -->
-    </div><!-- close dashboard gauge row -->
-
-    |<!-- else if school page then, -->
-    <h2 class="col-xs-12 col-sm-8">{{#var:page}} Data</h2>
-    <div class="col-xs-12 col-sm-4 compare">[[Wind for Schools Portal/Comparison#{{#show:{{#var:page}}|?WFSPTurbineID}}|
-        <span class="btn btn-metmast-secondary"><i class="fa fa-clone"></i> Compare This School</span>]]
-    </div>
-    <div class="metmast-dashboard-cluster">
-        <div class="metmast-dashboard-gauge stats col-xs-12 col-sm-6 col-lg-4">
-            <div class="row">
-                <span class="metmast-dashboard-icon col-xs-12 col-sm-4"><i class="fa fa-tachometer" aria-hidden="true"></i></span>
-                <span class="metmast-dashboard-data col-xs-12 col-sm-8">
-                    <span>Watts: <b class="alert-info right watts"></b></span>
-                    <span>Volts: <b class="alert-info right volts"></b></span>
-                    <span>RPM:   <b class="alert-info right rpm"></b></span>
-                    <span>Wind Speed: <b class="alert-info right speed"></b></span>
-                </span><!-- close metmast-dashboard-data -->
-                <span class="metmast-dashboard-label">Current Data</span>
-                <span class="metmast-dashboard-note col-xs-12">Data is refreshed every 10 minutes</span>
-            </div><!-- close row -->
-        </div>
-        <div class="metmast-dashboard-gauge health col-xs-12 col-sm-6 col-lg-4">
-            <div class="row">
-                <span class="metmast-dashboard-icon col-xs-12 col-sm-6"><i class="fa fa-heartbeat" aria-hidden="true"></i></span>
-                <span class="metmast-dashboard-data col-xs-12 col-sm-6">
-                    <span>Turbine Status:<br /><b class="alert-info turbineHealth"></b></span>
-                    <span>System Status<br /><b class="alert-info systemHealth"></b></span>
-                </span><!-- close metmast-dashboard-data -->
-                <span class="metmast-dashboard-label">Current Status</span>
-                <span class="metmast-dashboard-note col-xs-12">Last Reported: <span class="timestamp"></span></span>
-            </div><!-- close row -->
-        </div>
-        <div class="metmast-dashboard-gauge power col-xs-12 col-lg-4">
-            <div class="row">
-                <span class="metmast-dashboard-icon col-xs-12 col-sm-4"><i class="fa fa-bolt" aria-hidden="true"></i></span>
-                <span class="metmast-dashboard-data col-xs-12 col-sm-8">
-                    <span>Today:<b class="alert-info right dailyEnergy"></b></span>
-                    <span>Lifetime:<b class="alert-info right lifeEnergy"></b></span>
-                    <span class="installedCapacity">Installed Capacity:<b class="alert-info right capacity">{{#show:{{#var:page}}|?InstalledCapacity#kW|default=n/a}}</b></span>
-                </span><!-- close metmast-dashboard-data -->
-                <span class="metmast-dashboard-label">Turbine Power</span>
-            </div><!-- close row -->
-        </div>
-        <div class="col-xs-12 center">
-            <span class="btn btn-metmast-secondary" data-toggle="modal" data-target="#MetMastDownload" style="margin:16px 0 0;">
-                <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                Download Data
-            </span>
-        </div>
+        <span>Welcome to the National Wind Technology Center's Met Mast Portal!</span>
     </div>
     }}
     </div>

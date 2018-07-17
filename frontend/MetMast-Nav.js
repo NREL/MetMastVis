@@ -43,30 +43,6 @@ $(document).ready(function () {
             }
         }
     }); // End smooth scroll to anchors.
-
-    if ($('.hidden-lesson-plan-resource').length > 0) {
-        // Move resources to better location.
-        var resourcesHTML = '';
-        $('.hidden-lesson-plan-resource').each(function () {
-            var resourceType = $(this).find('.resource').data('resource-type');
-            var resourceName = $(this).find('.resource').data('resource-name');
-            var resourceDesc = $(this).find('.resource').data('resource-description');
-            var fileName = $(this).find('.resource').data('filename');
-            var resourceURL = $(this).find('.resource-link').html();
-            resourcesHTML += [
-                '<div class="lesson-plan-resource col-xs-12 col-sm-4">',
-                '<div class="resource-details">',
-                '<div class="resource-name">' + resourceName + '</div>',
-                '<div class="resource-icon text-right">' + getIconForResource(resourceType, fileName) + '</div>',
-                '</div>',
-                '<div class="resource-url">',
-                '<span class="plainlinks wfs-downloadlink">' + resourceURL + '</span>',
-                '</div>',
-                '<div class="resource-desc">' + resourceDesc + '</div>',
-                '</div>'].join("\n");
-        });
-        $('#lessonPlanResources').append(resourcesHTML);
-    }
 }); // End document ready.
 
 function getIconForResource(type, fileName) {

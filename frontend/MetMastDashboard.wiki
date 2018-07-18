@@ -19,9 +19,14 @@
         {{#ifeq:{{#var:page}}|NWTC Met Mast Portal|
         <h2 class="col-xs-12">NWTC Meteorological Mast Data</h2>
         <div class="metmast-dashboard-header col-xs-12">
-        <span>Welcome to the National Wind Technology Center's Met Mast Portal!</span>
-    </div>
+            <span>Welcome to the National Wind Technology Center's Met Mast Portal!</span>
+        </div>
     }}
+    </div>
+    <div class="metmast-dashboard-wrapper row">
+        <div class="metmast-dashboard-header col-xs-12">
+            <div id="csv_data"></div>
+        </div>
     </div>
     {{#Widget:MetMast-Dashboard}}
 </includeonly>

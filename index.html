@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Graphs from CSVs</title>
+        <!--
+        <link rel='stylesheet' href='stylesheets/style.css' />
+		<link rel='stylesheet' href='stylesheets/bootstrap.min.css' />
+		<link rel='stylesheet' href='stylesheets/font-awesome.min.css' />
+        -->
+		<!-- Load c3.css --><!--
+		<link href="stylesheets/c3.css" rel="stylesheet" type="text/css">
+		-->	
+		<!-- Load LaTeX rendering -->
+		<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-AMS-MML_SVG" async></script>
+		<!-- Load d3.js and other visualization libraries -->
+		<script type = "text/javascript" src = "http://d3js.org/d3.v3.min.js" charset = "utf-8"></script>
+        <script type = "text/javascript" src = "https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script type = "text/javascript" src = "https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js"></script>
+		<!-- Load papaparse.js -->
+		<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js"></script>
+	</head>
+  	<body>
+		<h1 align = "center">MetMast Web Portal</h1>  
+		<div id = "latex"></div>
+    	<div class = "container">
+			<div id = "buttons">
+				<select name = "graphs_select" id = "graphs_select" onchange = "element_select()">
+					<option value = "0"> Graphs </option>
+					<option value = "1"> 1 </option>
+					<option value = "2"> 2 </option>
+					<option value = "3"> 3 </option>
+					<option value = "4"> 4 </option>
+				</select>
+				<select name = "row_select" id = "row_select" onchange = "element_select()">
+					<option value = "0"> Row </option>
+
+				</select>
+				<select name = "col_select" id = "col_select" onchange = "element_select()">
+					<option value = "0"> Col </option>
+
+				</select>
+			</div>
+			<div id = "chart">
+				<div style = "height: 800px;">
+
+				</div>
+			</div>
+		</div>
+		<!--Utilities for plotting -->
+		<script type = "text/javascript" src = "utils.js"></script>
+		<!--Data functions for plotting -->
+		<script type = "text/javascript" src = "met_funcs.js"></script>		
+		<!--Main file to create graphs -->
+		<script type = "text/javascript" src = "vis.js"></script>
+  	</body>
+</html>

@@ -25,6 +25,7 @@ class S3Manager():
         
     def is_file_in_bucket(self,filename):
         '''sets self.client.duplicate to filename if it exists already.'''
+        self.get_bucket_keys()
         for string in self.keys:
             if string=='int/'+filename:
                 self.client.duplicate=filename

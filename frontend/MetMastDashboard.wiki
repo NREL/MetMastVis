@@ -28,5 +28,10 @@
             <div id="csv_data"></div>
         </div>
     </div>
+    <div class="container">
+        <div id="chart">
+            <div style="height: 800px;"></div>
+        </div>
+    </div>
     {{#Widget:MetMast-Dashboard}}
 </includeonly>

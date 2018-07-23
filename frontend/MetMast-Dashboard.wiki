@@ -408,7 +408,7 @@ function setInnerHTML(dom_object_id, data) {
 
 function createGraph(csv_data) {
   [graphish, layout] = cumulative_prof(csv_data, "2013_May.csv", "speed", "span");
-  Plotly.newPlot("chart", graphish, layout)
+  Plotly.newPlot("chart", [graphish], [layout])
 }
 
 function cumulative_prof(all_results, month_string, category, basecolor) {
@@ -476,7 +476,7 @@ function cumulative_prof(all_results, month_string, category, basecolor) {
 
   var diff = max_x - min_x;
 
-  var layout = {
+  var [layout] = {
     title: title_string,
     yaxis: {
       title: ystring

@@ -549,7 +549,7 @@ function createGraph(all_results, plot_type, category, new_files, {vertloc, rang
 
     }
 
-    Plotly.newPlot("chart", graphish, layout)
+    Plotly.newPlot("chart", [graphish], [layout])
 
 }
     

@@ -4,12 +4,13 @@ $(document).ready(function () {
 
 //supporting functions
 testrequest = function () {
+  var month_string = '2017_January.csv'
   $.ajax({
     // url: 'https://s3-us-west-2.amazonaws.com/nrel-nwtc-metmast-uni/int/dt=2017-01/2017_January.csv',
-    url: 'https://s3-us-west-2.amazonaws.com/nrel-nwtc-metmast-uni/int/2017_January.csv',
+    url: 'https://s3-us-west-2.amazonaws.com/nrel-nwtc-metmast-uni/int/' + month_string,
     dataType: 'text',
     success: function (data) {
-      parseCSVString(data)
+      parseCSVString(data, month_string)
     },
     error: function (e) {
       setInnerHTML("csv_data", e.error);
@@ -17,10 +18,10 @@ testrequest = function () {
   });
 }
 
-function parseCSVString(csv_string) {
+function parseCSVString(csv_string, month_string) {
   Papa.parse(csv_string, {
     complete: function (csv) {
-      createGraph(csv.data);
+      createGraph(csv.data, month_string);
     }
   });
 }
@@ -29,9 +30,11 @@ function setInnerHTML(dom_object_id, data) {
   document.getElementById(dom_object_id).innerHTML = data;
 }
 
-function createGraph(csv_data) {
-  [graphish, layout] = cumulative_prof(csv_data, "2013_May.csv", "speed", "span");
-  Plotly.newPlot("chart", graphish, layout)
+function createGraph(csv_data, month_string) {
+  [graphish, layout] = cumulative_prof(csv_data, month_string, "speed", "span");
+  console.log(graphish);
+  console.log(layout);
+  Plotly.newPlot("chart", [graphish], [layout])
 }
 
 function cumulative_prof(all_results, month_string, category, basecolor) {

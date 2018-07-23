@@ -1,5 +1,46 @@
 <!DOCTYPE html>
 <html>
+<style>
+#cat_select {
+	display: none;
+}
+#vertloc_select {
+	display: none;
+}
+#range_length_select {
+	display: none;
+}
+#format_select {
+	display: none;
+}
+#month_select {
+	display: none;
+}
+#year_select {
+	display: none;
+}
+#start_month_select {
+	display: none;
+}
+#start_year_select {
+	display: none;
+}
+#end_month_select {
+	display: none;
+}
+#end_year_select {
+	display: none;
+}
+#row_select {
+	display: none;
+}
+#col_select {
+	display: none;
+}
+#start {
+	display: none;
+}
+</style>
 	<head>
 		<title>Graphs from CSVs</title>
         <!--
@@ -15,8 +56,10 @@
 		<!-- Load d3.js and other visualization libraries -->
 		<script type = "text/javascript" src = "http://d3js.org/d3.v3.min.js" charset = "utf-8"></script>
         <script type = "text/javascript" src = "https://code.jquery.com/jquery-3.3.1.min.js"></script>
-        <script type = "text/javascript" src = "https://cdn.plot.ly/plotly-latest.min.js"></script>
-        <script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js"></script>
+		<script type = "text/javascript" src = "https://cdn.plot.ly/plotly-latest.min.js"></script>
+		<!--
+		<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js"></script>
+		-->
 		<!-- Load papaparse.js -->
 		<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js"></script>
 	</head>
@@ -24,28 +67,82 @@
 		<h1 align = "center">MetMast Web Portal</h1>  
 		<div id = "latex"></div>
     	<div class = "container">
+
 			<div id = "buttons">
-				<select name = "graphs_select" id = "graphs_select" onchange = "element_select()">
-					<option value = "0"> Graphs </option>
-					<option value = "1"> 1 </option>
-					<option value = "2"> 2 </option>
-					<option value = "3"> 3 </option>
-					<option value = "4"> 4 </option>
+
+				<select name = "plot_select" id = "plot_select" onmousedown = "element_select()">
+						<option value = "0"> Plot type </option>
 				</select>
-				<select name = "row_select" id = "row_select" onchange = "element_select()">
+
+				<select name = "cat_select" id = "cat_select" onmousedown = "element_select()">
+						<option value = "0"> Category </option>
+				</select>
+
+				<input type = "number" id = "vertloc_select" value = "0">
+
+				<select name = "range_length_select" id = "range_length_select" onmousedown = "element_select()">
+						<option value = "0"> One Month / Multiple? </option>
+						<option value = "one_month"> One Month </option>
+						<option value = "multiple"> Multiple </option>
+				</select>
+
+				<select name = "format_select" id = "format_select" onmousedown = "element_select()">
+						<option value = "0"> Graph Format </option>
+						<option value = "dropdown"> Dropdown </option>
+						<option value = "slider"> Slider </option>
+						<option value = "grid"> Grid </option>
+				</select>
+
+				<select name = "month_select" id = "month_select" onmousedown = "element_select()">
+						<option value = "0"> Month </option>
+				</select>
+
+				<select name = "year_select" id = "year_select" onmousedown = "element_select()">
+						<option value = "0"> Year </option>
+						<option value = "2013"> 2013 </option>
+						<option value = "2017"> 2017 </option>
+				</select>
+
+				<select name = "start_month_select" id = "start_month_select" onmousedown = "element_select()">
+						<option value = "0"> Start Month </option>
+				</select>
+
+				<select name = "start_year_select" id = "start_year_select" onmousedown = "element_select()">
+						<option value = "0"> Start Year </option>
+						<option value = "2013"> 2013 </option>
+						<option value = "2017"> 2017 </option>
+				</select>
+
+				<select name = "end_month_select" id = "end_month_select" onmousedown = "element_select()">
+						<option value = "0"> End Month </option>
+				</select>
+
+				<select name = "end_year_select" id = "end_year_select" onmousedown = "element_select()">
+						<option value = "0"> End Year </option>
+						<option value = "2013"> 2013 </option>
+						<option value = "2017"> 2017 </option>						
+				</select>
+
+				<select name = "row_select" id = "row_select" onmousedown = "element_select()">
 					<option value = "0"> Row </option>
-
 				</select>
-				<select name = "col_select" id = "col_select" onchange = "element_select()">
+
+				<select name = "col_select" id = "col_select" onmousedown = "element_select()">
 					<option value = "0"> Col </option>
-
 				</select>
-			</div>
-			<div id = "chart">
-				<div style = "height: 800px;">
 
-				</div>
+				<button id = "start" onclick = "element_select()"> Start </button>
+
+				<button id = "next" onclick = "element_select()"> Next </button>
+
+				<button id = "reset" onclick = "reloadPage()"> Reset </button>
+
 			</div>
+
+			<div id = "chart">
+				<div style = "height: 800px;"></div>
+			</div>
+
 		</div>
 		<!--Utilities for plotting -->
 		<script type = "text/javascript" src = "utils.js"></script>

@@ -19,7 +19,9 @@
 all_results = [];
 
 // For multiple files (works for single also)
-function parseData(createGraph, plot_type, category, month_list, {vertloc, range_length, format, row_select, col_select} = {}) {
+function parseData(createGraph, plot_type, month_list, basecolor, {category, abscissa, group_by, vertloc, range_length, format, row_select, col_select, curvefit, bins, nsector, bin_arrange} = {}) {
+
+    load.innerText = "Loading...";
 
     //for (var k = 0; k < input_files.length; k++) {
     for (var k = 0; k < month_list.length; k++) {
@@ -30,7 +32,7 @@ function parseData(createGraph, plot_type, category, month_list, {vertloc, range
                 all_results.push(results);
 
                 if (all_results.length == month_list.length) {
-                    createGraph(all_results, plot_type, category, month_list, {vertloc: vertloc, range_length: range_length, format: format, rows: row_select, cols: col_select})
+                    createGraph(all_results, plot_type, month_list, basecolor, {category: category, abscissa: abscissa, group_by: group_by, vertloc: vertloc, range_length: range_length, format: format, rows: row_select, cols: col_select, curvefit: curvefit, nbins: bins, nsector: nsector, bin_arrange: bin_arrange})
                 }
 
             }
@@ -66,7 +68,8 @@ function calcDomain_y(index, N) {
 // Get cardinal directions for Wind Rose
 function getCardinal(angle, nsector) {
     //easy to customize by changing the number of directions you have 
-    var directions = nsector;
+    
+    var directions = 32;//nsector;
     
     var degree = 360 / directions;
     angle = angle + degree/2;
@@ -149,7 +152,9 @@ function titleCase(str) {
 
 function plot_types() {
 
-    var plot_type = ["Cumulative Profile", "Stability Profile", "Hourly", "Rose Figure", "Wind Direction Scatter", "Stability Wind Direction Scatter"];    
+    var plot_type = ["Cumulative Profile", "Stability Profile", "Hourly", "Rose Figure", "Wind Direction Scatter", "Stability Wind Direction Scatter",
+                     "Grouped Wind Direction Scatter", "Histogram", "Histogram by Stability", "Stacked Histogram by Stability",
+                     "Monthly Stacked Histogram by Stability", "Normalized Histogram by Stability"];    
 
     return plot_type;
 
@@ -157,7 +162,9 @@ function plot_types() {
 
 function vertloc_plots() {
 
-    var vertloc_plots = ["Stability Profile", "Rose Figure", "Wind Direction Scatter", "Stability Wind Direction Scatter"];
+    var vertloc_plots = ["Stability Profile", "Rose Figure", "Wind Direction Scatter", "Stability Wind Direction Scatter",
+                         "Grouped Wind Direction Scatter", "Histogram", "Histogram by Stability", "Stacked Histogram by Stability",
+                         "Normalized Histogram by Stability"];
 
     return vertloc_plots;
 
@@ -165,9 +172,17 @@ function vertloc_plots() {
 
 function one_month_plots() {
 
-    var one_month_plots = ["Stability Profile", "Stability Wind Direction Scatter"];
+    var one_month_plots = ["Stability Profile", "Stability Wind Direction Scatter", "Histogram by Stability"];
 
     return one_month_plots;
+
+}
+
+function bin_plots() {
+
+    var bin_plots = ["Rose Figure", "Grouped Wind Direction Scatter", "Histogram"];
+
+    return bin_plots;
 
 }
 
@@ -188,228 +203,556 @@ function element_select() {
 
     if (plot_type != 0) {
 
-        document.getElementById("cat_select").style.display = "inline"; 
-        var cat_list = document.getElementById("cat_select");
+        if ((plot_type === "Normalized Histogram by Stability") | (plot_type === "Monthly Normalized Histogram by Stability")) {
 
-        if (cat_list.options.length <= categories_to_keep().length) {
+            var category = 999;
 
-            for (var cat = 0; cat < categories_to_keep().length; cat++) {
-                cat_list.options[cat_list.options.length] = new Option(categories_to_keep()[cat],categories_to_keep()[cat]);         
-            }
+        } else {
 
-        }  
+            document.getElementById("cat_select").style.display = "inline"; 
+            var cat_list = document.getElementById("cat_select");
 
-        var category = document.getElementById("cat_select").value;
+            if (cat_list.options.length <= categories_to_keep().length) {
+
+                for (var cat = 0; cat < categories_to_keep().length; cat++) {
+                    cat_list.options[cat_list.options.length] = new Option(categories_to_keep()[cat],categories_to_keep()[cat]);         
+                }
+
+            }  
+
+            var category = document.getElementById("cat_select").value;
+
+        }
 
         if (category != 0) {
 
-            if (vertloc_plots().indexOf(plot_type) === -1) {
+            if (plot_type === "Grouped Wind Direction Scatter") {
+                
+                document.getElementById("abscissa_select").style.display = "inline"; 
+                var abscissa_list = document.getElementById("abscissa_select");
 
-                vertloc = 999;
-               
-            } else {
+                if (abscissa_list.options.length <= categories_to_keep().length) {
 
-                document.getElementById("vertloc_select").style.display = "inline"; 
-                var vertloc = document.getElementById("vertloc_select").value;
- 
+                    for (var cat = 0; cat < categories_to_keep().length; cat++) {
+                        abscissa_list.options[abscissa_list.options.length] = new Option(categories_to_keep()[cat],categories_to_keep()[cat]);         
+                    }
+    
+                }  
+    
+                var abscissa = document.getElementById("abscissa_select").value;
+
+                if (abscissa != 0) {
+
+                    document.getElementById("group-by_select").style.display = "inline"; 
+                    var group_by_list = document.getElementById("group-by_select");
+
+                    if (group_by_list.options.length <= categories_to_keep().length) {
+
+                        for (var cat = 0; cat < categories_to_keep().length; cat++) {
+                            group_by_list.options[group_by_list.options.length] = new Option(categories_to_keep()[cat],categories_to_keep()[cat]);         
+                        }
+        
+                    }  
+        
+                    var group_by = document.getElementById("group-by_select").value;
+
+                }
+
             }
 
-            if (vertloc != 0) {
+            if (((plot_type === "Grouped Wind Direction Scatter") && (abscissa != 0) && (group_by != 0)) | (plot_type != "Grouped Wind Direction Scatter")) {
 
-                if (one_month_plots().indexOf(plot_type) === -1) {
+                console.log(abscissa);
+                console.log(group_by);
 
-                    document.getElementById("range_length_select").style.display = "inline"; 
-                    var range_length = document.getElementById("range_length_select").value;
+                if (vertloc_plots().indexOf(plot_type) === -1) {
 
+                    vertloc = 999;
+                
                 } else {
-                    
-                    range_length = "one_month";
 
+                    document.getElementById("vertloc_select").style.display = "inline"; 
+                    var vertloc = document.getElementById("vertloc_select").value;
+    
                 }
 
-                if (range_length === "one_month") {
+                if (vertloc != "") {
 
-                    document.getElementById("month_select").style.display = "inline";
-                    var select_month = document.getElementById("month_select");
+                    //console.log(vertloc);
 
-                    if (select_month.options.length <= monthnames().length) {
+                    if (one_month_plots().indexOf(plot_type) === -1) {
 
-                        for (var mon = 0; mon < monthnames().length; mon++) {
-                            select_month.options[select_month.options.length] = new Option(monthnames()[mon],monthnames()[mon]);         
-                        }
+                        document.getElementById("range_length_select").style.display = "inline"; 
+                        var range_length = document.getElementById("range_length_select").value;
 
-                    }          
-
-                    if (select_month.value != 0) {
-
-                        document.getElementById("year_select").style.display = "inline";
-                        document.getElementById("start").style.display = "inline"; 
-                        document.getElementById("next").style.display = "none"; 
-                        var select_year = document.getElementById("year_select").value;
-
-                    }
-                    
-                    var month_final = document.getElementById("month_select").value;
-                    var year_final = document.getElementById("year_select").value;
-
-                    if ((month_final != 0) && (year_final != 0)) {
-
-                        var input_file_string = year_final + "_" + month_final + ".csv";
-                        var input_file_list = [];
-                        input_file_list.push(input_file_string);
-
-                        parseData(createGraph, plot_type, category, input_file_list, {vertloc: vertloc, range_length: range_length});
+                    } else {
+                        
+                        range_length = "one_month";
 
                     }
 
-                }
+                    if (range_length === "one_month") {
 
-                if (range_length === "multiple") {
+                        document.getElementById("month_select").style.display = "inline";
+                        var select_month = document.getElementById("month_select");
 
-                    document.getElementById("format_select").style.display = "inline";
-                    var format = document.getElementById("format_select").value;
-
-                    // Re-emerge everything
-                    if (format != 0) {
-
-                        document.getElementById("start_month_select").style.display = "inline"; 
-
-                        if (document.getElementById("start_month_select").value != 0) {
-
-                            document.getElementById("start_year_select").style.display = "inline"; 
-
-                        }
-                    
-                        if (document.getElementById("start_year_select").value != 0) {
-
-                            document.getElementById("end_month_select").style.display = "inline"; 
-
-                        }
-                            
-                        if (document.getElementById("end_month_select").value != 0) {
-
-                            document.getElementById("end_year_select").style.display = "inline"; 
-
-                            if (format != "grid") {
-
-                                document.getElementById("start").style.display = "inline"; 
-                                document.getElementById("next").style.display = "none"; 
-
-                            }
-
-                        }
-                            
-                        if ((document.getElementById("end_year_select").value != 0) && (format === "grid")) {
-
-                            document.getElementById("row_select").style.display = "inline"; 
-
-                        }
-                            
-                        if ((document.getElementById("row_select").value != 0) && (format === "grid")) {
-
-                            document.getElementById("col_select").style.display = "inline"; 
-                            document.getElementById("start").style.display = "inline"; 
-                            document.getElementById("next").style.display = "none"; 
-                            
-                            
-                        }
-
-                        var select_start_month = document.getElementById("start_month_select");
-                        var start_year = document.getElementById("start_year_select").value;
-                        var select_end_month = document.getElementById("end_month_select");
-                        var end_year = document.getElementById("end_year_select").value;
-
-                        if ((select_start_month.options.length <= monthnames().length) && (select_end_month.options.length <= monthnames().length)) {
+                        if (select_month.options.length <= monthnames().length) {
 
                             for (var mon = 0; mon < monthnames().length; mon++) {
-                                select_start_month.options[select_start_month.options.length] = new Option(monthnames()[mon],monthnames()[mon]);
-                                select_end_month.options[select_end_month.options.length] = new Option(monthnames()[mon],monthnames()[mon]);            
+                                select_month.options[select_month.options.length] = new Option(monthnames()[mon],monthnames()[mon]);         
+                            }
+
+                        }          
+
+                        if ((select_month.value != 0) && (plot_type != "Histogram")) {
+
+                            document.getElementById("year_select").style.display = "inline";
+                            // document.getElementById("start").style.display = "inline"; 
+                            // document.getElementById("next").style.display = "none"; 
+                            var select_year = document.getElementById("year_select").value;
+
+                        } else if ((select_month.value != 0) && (plot_type === "Histogram")) {
+
+                            document.getElementById("year_select").style.display = "inline";
+                            var select_year = document.getElementById("year_select").value;
+
+                        }
+                        
+                        var month_final = document.getElementById("month_select").value;
+                        var year_final = document.getElementById("year_select").value;
+
+                        if ((month_final != 0) && (year_final != 0)) {
+
+                            //load.innerText = "Loading...";
+
+                            var input_file_string = year_final + "_" + month_final + ".csv";
+                            var input_file_list = [];
+                            input_file_list.push(input_file_string);
+
+                            //load.innerText = "Loading...";
+
+                            if (plot_type === "Histogram") {
+
+                                document.getElementById("fit_select").style.display = "inline";
+                                var curvefit = document.getElementById("fit_select").value;
+
+                                if (curvefit != 0) {
+
+                                    document.getElementById("bin_select").style.display = "inline";
+                                    var bins = document.getElementById("bin_select").value;
+
+                                    if (bins != "") {
+
+                                        document.getElementById("color_select").style.display = "inline";
+                                        
+                                        // Histogram can't take certain colors for single month
+                                        var rm  = document.getElementById("color_select");
+
+                                        if (rm.length > 1 + Object.keys(get_nrelcolors()).length) {
+
+                                            rm.remove(rm.length-1);
+
+                                        }
+
+                                        document.getElementById("start").style.display = "inline"; 
+                                        document.getElementById("next").style.display = "none";
+                                        var basecolor = document.getElementById("color_select").value;
+
+                                        if (basecolor != 0) {
+
+                                            parseData(createGraph, plot_type, input_file_list, basecolor, {category: category, vertloc: vertloc, range_length: range_length, curvefit: curvefit, bins: bins});
+
+                                        }
+
+                                    }
+
+                                }
+                            
+                            } else {
+
+                                if (bin_plots().indexOf(plot_type) === -1) {
+
+                                    document.getElementById("color_select").style.display = "inline";
+                                    document.getElementById("start").style.display = "inline"; 
+                                    document.getElementById("next").style.display = "none";
+                                    var basecolor = document.getElementById("color_select").value;
+
+                                    if (basecolor != 0) {  
+
+                                        if (category === 999) {
+
+                                            parseData(createGraph, plot_type, input_file_list, basecolor, {vertloc: vertloc, range_length: range_length});
+
+                                        } else {
+                                            
+                                            parseData(createGraph, plot_type, input_file_list, basecolor, {category: category, vertloc: vertloc, range_length: range_length});
+
+                                        }
+
+                                    }
+
+                                } else {
+
+                                    if (plot_type === "Rose Figure") {
+
+                                        document.getElementById("bin_select").style.display = "inline";
+                                        var bins = document.getElementById("bin_select").value;
+
+                                        if (bins != "") {
+
+                                            document.getElementById("sector_select").style.display = "inline";
+                                            var nsector = document.getElementById("sector_select").value;
+
+                                            if (nsector != 0) {
+
+                                                document.getElementById("bin-arrange_select").style.display = "inline";
+                                                var bin_arrange = document.getElementById("bin-arrange_select").value;
+
+                                                if (bin_arrange != 0) {
+
+                                                    document.getElementById("color_select").style.display = "inline";
+                                                    document.getElementById("start").style.display = "inline"; 
+                                                    document.getElementById("next").style.display = "none";
+                                                    var basecolor = document.getElementById("color_select").value;
+
+                                                    if (basecolor != 0) {  
+
+                                                        if (category === 999) {
+
+                                                            parseData(createGraph, plot_type, input_file_list, basecolor, {vertloc: vertloc, range_length: range_length, bins: bins, nsector: nsector, bin_arrange: bin_arrange});
+
+                                                        } else {
+
+                                                            parseData(createGraph, plot_type, input_file_list, basecolor, {category: category, vertloc: vertloc, range_length: range_length, bins: bins, nsector: nsector, bin_arrange: bin_arrange});
+
+                                                        }
+
+                                                    }
+
+                                                }
+
+                                            }
+
+                                        }                                   
+
+                                    } else {
+
+                                        document.getElementById("bin_select").style.display = "inline";
+                                        var bins = document.getElementById("bin_select").value;
+
+                                        if (bins != "") {
+
+                                            document.getElementById("color_select").style.display = "inline";
+                                            document.getElementById("start").style.display = "inline"; 
+                                            document.getElementById("next").style.display = "none";
+                                            var basecolor = document.getElementById("color_select").value;
+
+                                            if (basecolor != 0) {  
+
+                                                if (category === 999) {
+
+                                                    parseData(createGraph, plot_type, input_file_list, basecolor, {vertloc: vertloc, range_length: range_length, bins: bins});
+
+                                                } else {
+
+                                                    if (plot_type === "Grouped Wind Direction Scatter") {
+
+                                                        parseData(createGraph, plot_type, input_file_list, basecolor, {category: category, abscissa: abscissa, group_by: group_by, vertloc: vertloc, range_length: range_length, bins: bins});
+
+                                                    } else {
+
+                                                        parseData(createGraph, plot_type, input_file_list, basecolor, {category: category, vertloc: vertloc, range_length: range_length, bins: bins});
+
+                                                    }
+
+                                                }
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
                             }
 
                         }
 
-                        if ((start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0)) {
-                            
-                            var start_month = document.getElementById("start_month_select").value;
-                            var end_month = document.getElementById("end_month_select").value;
-                            var month_list = get_file_range(String(start_month), parseInt(start_year), String(end_month), parseInt(end_year));
+                    }
 
-                        }
-                            
-                        if (format === "grid") {
+                    if (range_length === "multiple") {
 
-                            if ((start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0)) {
+                        document.getElementById("format_select").style.display = "inline";
+                        var format = document.getElementById("format_select").value;
 
-                                var combos = get_grid_format(month_list.length);
-                                var select_row = document.getElementById("row_select");
-                                var select_col = document.getElementById("col_select");
+                        // Re-emerge everything
+                        if (format != 0) {
+
+                            document.getElementById("start_month_select").style.display = "inline"; 
+
+                            if (document.getElementById("start_month_select").value != 0) {
+
+                                document.getElementById("start_year_select").style.display = "inline"; 
+
+                            }
+                        
+                            if (document.getElementById("start_year_select").value != 0) {
+
+                                document.getElementById("end_month_select").style.display = "inline"; 
+
+                            }
                                 
-                                var combo_list = [];
-                                for (var c = 0; c < Object.keys(combos).length; c++) {
-                                    combo_list.push(combos[Object.keys(combos)[c]][0]);
+                            if (document.getElementById("end_month_select").value != 0) {
+
+                                document.getElementById("end_year_select").style.display = "inline"; 
+
+                                if (format != "grid") {
+
+                                    document.getElementById("start").style.display = "inline"; 
+                                    document.getElementById("next").style.display = "none"; 
+
                                 }
 
-                                if ((select_row.options.length <= Object.keys(combos).length) && (select_col.options.length <= Object.keys(combos).length)) {
-                                    
-                                    for (var c = 0; c < Object.keys(combos).length; c++) {
-                                        select_row.options[select_row.options.length] = new Option("" + combos[Object.keys(combos)[c]][0], combos[Object.keys(combos)[c]][0]);
+                            }
+                                
+                            if ((document.getElementById("end_year_select").value != 0) && (format === "grid")) {
+
+                                document.getElementById("row_select").style.display = "inline"; 
+
+                            }
+                                
+                            if ((document.getElementById("row_select").value != 0) && (format === "grid")) {
+
+                                document.getElementById("col_select").style.display = "inline";
+                                var cols = document.getElementById("col_select").value; 
+
+                                if (cols != 0) {
+
+                                    if (bin_plots().indexOf(plot_type) === -1) {
+
+                                        var bins = 999;
+
+                                        document.getElementById("color_select").style.display = "inline";
+                                        document.getElementById("start").style.display = "inline"; 
+                                        document.getElementById("next").style.display = "none";
+                                        var basecolor = document.getElementById("color_select").value;
+
+                                    } else {
+
+                                        document.getElementById("bin_select").style.display = "inline";
+                                        var bins = document.getElementById("bin_select").value;
+        
+                                        if (bins != "") {
+
+                                            document.getElementById("color_select").style.display = "inline";
+                                            document.getElementById("start").style.display = "inline"; 
+                                            document.getElementById("next").style.display = "none";
+                                            var basecolor = document.getElementById("color_select").value;
+
+                                        }
+
                                     }
 
                                 }
                                 
-                                n1r = document.getElementsByName("row_select");
-                                n2r = Array.prototype.slice.call(n1r);
-                                n3r = n2r[0].childNodes.length;
+                            }
 
-                                n1c = document.getElementsByName("col_select");
-                                n2c = Array.prototype.slice.call(n1c);
-                                n3c = n2c[0].childNodes.length;
+                            var select_start_month = document.getElementById("start_month_select");
+                            var start_year = document.getElementById("start_year_select").value;
+                            var select_end_month = document.getElementById("end_month_select");
+                            var end_year = document.getElementById("end_year_select").value;
 
-                                if ((parseInt(select_row.value) != 0) && (n3r <= (3 + combo_list.length)) && (n3c <= 3)) {
+                            if ((select_start_month.options.length <= monthnames().length) && (select_end_month.options.length <= monthnames().length)) {
 
-                                    var group_in = 0;
-                                    for (var gi = 0; gi < Object.keys(combos).length; gi++) {
+                                for (var mon = 0; mon < monthnames().length; mon++) {
+                                    select_start_month.options[select_start_month.options.length] = new Option(monthnames()[mon],monthnames()[mon]);
+                                    select_end_month.options[select_end_month.options.length] = new Option(monthnames()[mon],monthnames()[mon]);            
+                                }
 
-                                        if (combos[Object.keys(combos)[gi]][0] === parseInt(select_row.value)) {
-                                            group_in = gi;
-                                            select_col.options[select_col.options.length] = new Option("" + combos[""+group_in][1], combos[""+group_in][1]);
+                            }
+
+                            if ((start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0)) {
+                                
+                                var start_month = document.getElementById("start_month_select").value;
+                                var end_month = document.getElementById("end_month_select").value;
+                                var month_list = get_file_range(String(start_month), parseInt(start_year), String(end_month), parseInt(end_year));
+
+                            }
+                                
+                            if (format === "grid") {
+
+                                if ((start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0) && (bins != "") && (basecolor != 0)) {
+
+                                    var combos = get_grid_format(month_list.length);
+                                    var select_row = document.getElementById("row_select");
+                                    var select_col = document.getElementById("col_select");
+                                    
+                                    var combo_list = [];
+                                    for (var c = 0; c < Object.keys(combos).length; c++) {
+                                        combo_list.push(combos[Object.keys(combos)[c]][0]);
+                                    }
+
+                                    if ((select_row.options.length <= Object.keys(combos).length) && (select_col.options.length <= Object.keys(combos).length)) {
+                                        
+                                        for (var c = 0; c < Object.keys(combos).length; c++) {
+                                            select_row.options[select_row.options.length] = new Option("" + combos[Object.keys(combos)[c]][0], combos[Object.keys(combos)[c]][0]);
                                         }
 
                                     }
                                     
+                                    n1r = document.getElementsByName("row_select");
+                                    n2r = Array.prototype.slice.call(n1r);
+                                    n3r = n2r[0].childNodes.length;
+
+                                    n1c = document.getElementsByName("col_select");
+                                    n2c = Array.prototype.slice.call(n1c);
+                                    n3c = n2c[0].childNodes.length;
+
+                                    if ((parseInt(select_row.value) != 0) && (n3r <= (3 + combo_list.length)) && (n3c <= 3)) {
+
+                                        var group_in = 0;
+                                        for (var gi = 0; gi < Object.keys(combos).length; gi++) {
+
+                                            if (combos[Object.keys(combos)[gi]][0] === parseInt(select_row.value)) {
+                                                group_in = gi;
+                                                select_col.options[select_col.options.length] = new Option("" + combos[""+group_in][1], combos[""+group_in][1]);
+                                            }
+
+                                        }
+                                        
+                                    }
                                 }
-                            }
+                                    
+                                var row_select = document.getElementById("row_select").value;
+                                var col_select = document.getElementById("col_select").value;
+
+                                if ((row_select != 0) && (col_select != 0) && (start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0) && (bins != "") && (basecolor != 0)) {
+
+                                    //load.innerText = "Loading...";
+
+                                    if (bins === 999) {
+
+                                        if ((vertloc === 999) && (category === 999)) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {range_length: range_length, format: format, row_select: row_select, col_select: col_select});
+
+                                        } else if (vertloc === 999) {
+
+                                            //load.innerText = "Loading...";
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {category: category, range_length: range_length, format: format, row_select: row_select, col_select: col_select});
+
+                                        } else if (category === 999) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {vertloc: vertloc, range_length: range_length, format: format, row_select: row_select, col_select: col_select});
+
+                                        } else {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {category: category, range_length: range_length, vertloc: vertloc, format: format, row_select: row_select, col_select: col_select});
+
+                                        }
+
+                                    } else {
+
+                                        if ((vertloc === 999) && (category === 999)) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {range_length: range_length, format: format, row_select: row_select, col_select: col_select, bins: bins});
+
+                                        } else if (vertloc === 999) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {category: category, range_length: range_length, format: format, row_select: row_select, col_select: col_select, bins: bins});
+
+                                        } else if (category === 999) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {vertloc: vertloc, range_length: range_length, format: format, row_select: row_select, col_select: col_select, bins: bins});
+
+                                        } else {
+
+                                            if (plot_type === "Grouped Wind Direction Scatter") {
+
+                                                parseData(createGraph, plot_type, month_list, basecolor, {category: category, abscissa: abscissa, group_by: group_by, range_length: range_length, vertloc: vertloc, format: format, row_select: row_select, col_select: col_select, bins: bins});
+
+                                            } else {
+
+                                                parseData(createGraph, plot_type, month_list, basecolor, {category: category, range_length: range_length, vertloc: vertloc, format: format, row_select: row_select, col_select: col_select, bins: bins});
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            } else {
+
+                                if ((start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0) && (bins != "") && (basecolor != 0)) {
+
+                                    if (bins === 999) {
+
+                                        if ((vertloc === 999) && (category === 999)) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {range_length: range_length, format: format});
+
+                                        } else if (vertloc === 999) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {category: category, range_length: range_length, format: format});
+
+                                        } else if (category === 999) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {vertloc: vertloc, range_length: range_length, format: format});
+
+                                        } else {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {category: category, vertloc: vertloc, range_length: range_length, format: format});
+
+                                        }
+
+                                    } else {
+
+                                        if ((vertloc === 999) && (category === 999)) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {range_length: range_length, format: format, bins: bins});
+
+                                        } else if (vertloc === 999) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {category: category, range_length: range_length, format: format, bins: bins});
+
+                                        } else if (category === 999) {
+
+                                            parseData(createGraph, plot_type, month_list, basecolor, {vertloc: vertloc, range_length: range_length, format: format, bins: bins});
+
+                                        } else {
+
+                                            if (plot_type === "Grouped Wind Direction Scatter") {
+
+                                                parseData(createGraph, plot_type, month_list, basecolor, {category: category, abscissa: abscissa, group_by: group_by, vertloc: vertloc, range_length: range_length, format: format, bins: bins});
+
+                                            } else {
+
+                                                parseData(createGraph, plot_type, month_list, basecolor, {category: category, vertloc: vertloc, range_length: range_length, format: format, bins: bins});
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
                                 
-                            var row_select = document.getElementById("row_select").value;
-                            var col_select = document.getElementById("col_select").value;
-
-                            if ((row_select != 0) && (col_select != 0) && (start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0)) {
-
-                                if (vertloc === 999) {
-
-                                    parseData(createGraph, plot_type, category, month_list, {range_length: range_length, format: format, row_select: row_select, col_select: col_select});
-
-                                } else {
-
-                                    parseData(createGraph, plot_type, category, month_list, {range_length: range_length, vertloc: vertloc, format: format, row_select: row_select, col_select: col_select});
-
-                                }
-
                             }
 
-                        } else {
-
-                            if ((start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0)) {
-
-                                parseData(createGraph, plot_type, category, month_list, {vertloc: vertloc, range_length: range_length, format: format});
-
-                            }
-                            
                         }
+
                     }
+
                 }
+
             }
+
         }
+
     }
 
 }
@@ -487,12 +830,12 @@ function get_grid_format(graph_total) {
 }
 
 // For multiple files (works for single also) 
-function createGraph(all_results, plot_type, category, new_files, {vertloc, range_length, format, rows, cols} = {}) { 
+function createGraph(all_results, plot_type, new_files, basecolor, {category, abscissa, group_by, vertloc, range_length, format, rows, cols, curvefit, nbins, nsector, bin_arrange} = {}) { 
 
-    //var category = "speed";
-    var basecolor = "span";
-    //var vertloc = 80;
-    //var format = "slider";
+    rows = parseInt(rows);
+    cols = parseInt(cols);
+    nbins = parseInt(nbins);
+    nsector = parseInt(nsector);
 
     if (plot_type === "Cumulative Profile") {
 
@@ -523,12 +866,8 @@ function createGraph(all_results, plot_type, category, new_files, {vertloc, rang
     }
 
     if (plot_type === "Rose Figure") {
-        // Rose_fig
-        var bins = 6;
-        var nsector = 32;
-        var bin_arrange = "linear";
 
-        [graphish, layout] = rose_fig(all_results, new_files, category, vertloc, basecolor, bins, bin_arrange, nsector);
+        [graphish, layout] = rose_fig(all_results, new_files, category, vertloc, basecolor, nbins, bin_arrange, nsector);
 
     }
 
@@ -549,7 +888,64 @@ function createGraph(all_results, plot_type, category, new_files, {vertloc, rang
 
     }
 
-    Plotly.newPlot("chart", [graphish], [layout])
+    if (plot_type === "Grouped Wind Direction Scatter") {
+
+        console.log(basecolor);
+
+        if (range_length === "one_month") {
+            [graphish, layout] = groupby_winddir_scatter(all_results, new_files, category, abscissa, group_by, vertloc, basecolor, nbins);
+        }
+        if (range_length === "multiple") {
+            [graphish, layout] = monthly_groupby_winddir_scatter(all_results, new_files, category, abscissa, group_by, vertloc, basecolor, nbins, format, rows, cols);
+        }
+
+    }
+
+    if (plot_type === "Histogram") {
+
+        if (range_length === "one_month") {
+            [graphish, layout] = hist(all_results, new_files, category, vertloc, basecolor, nbins, curvefit);
+        }
+        if (range_length === "multiple") {
+            [graphish, layout] = monthly_hist(all_results, new_files, category, vertloc, basecolor, nbins, format, rows, cols);
+        }
+
+    }
+
+    if (plot_type === "Histogram by Stability") {
+        
+        [graphish, layout] = hist_by_stab(all_results, new_files, category, vertloc, basecolor, nbins);
+
+    }
+
+    if (plot_type === "Stacked Histogram by Stability") {
+
+        if (range_length === "one_month") {
+
+            [graphish, layout] = stacked_hist_by_stab(all_results, new_files, category, vertloc, basecolor);
+        }
+        if (range_length === "multiple") {
+            [graphish, layout] = monthly_stacked_hist_by_stab(all_results, new_files, category, vertloc, basecolor, format, rows, cols);
+        }
+
+    }
+
+    if (plot_type === "Normalized Histogram by Stability") {
+
+        if (range_length === "one_month") {
+            [graphish, layout] = norm_hist_by_stab(all_results, new_files, vertloc, basecolor);
+        }
+
+        if (range_length === "multiple") {
+            [graphish, layout] = monthly_norm_hist_by_stab(all_results, new_files, vertloc, basecolor, format, rows, cols);
+        }
+
+    }
+
+    // console.log(graphish);
+    // console.log(layout);
+    Plotly.newPlot("chart", graphish, layout)
+    load.innerText += "Done!";
 
 }
     
@@ -571,8 +967,10 @@ function process_data(all_results, j) {
     var arrays = all_results[j].data;
     var keys = arrays[7];
     var values = arrays.slice(10);
-    console.log(keys);
-    console.log(values);
+
+    // To display the data columns and values
+    // console.log(keys);
+    // console.log(values);
 
     var object1 = new Object();
     // remove -1 in code with QC data
@@ -602,6 +1000,7 @@ function cumulative_prof(all_results, input_files, category, basecolor) {
     var graphish = []; 
     var max_x = -Infinity;
     var min_x = Infinity;
+    var margin = 0.25;
     
     for (var j = 0; j < input_files.length; j++) {
 
@@ -670,7 +1069,7 @@ function cumulative_prof(all_results, input_files, category, basecolor) {
         },
         xaxis: {
             title: xstring,
-            range: [min_x-0.5*diff, max_x+0.5*diff]
+            range: [min_x-margin*diff, max_x+margin*diff]
         },
         hovermode: "closest"
     };
@@ -691,6 +1090,7 @@ function stab_prof(all_results, input_files, category, vertloc, basecolor) {
     var graphish = []; 
     var max_x = -Infinity;
     var min_x = Infinity;
+    var margin = 0.25;
 
     for (var j = 0; j < input_files.length; j++) {
 
@@ -775,7 +1175,7 @@ function stab_prof(all_results, input_files, category, vertloc, basecolor) {
         },
         xaxis: {
             title: xstring, 
-            range: [min_x-0.5*diff, max_x+0.5*diff]
+            range: [min_x-margin*diff, max_x+margin*diff]
         },
         hovermode: "closest"
     };
@@ -797,6 +1197,7 @@ function monthly_stab_prof(all_results, input_files, category, vertloc, basecolo
     var max_x = -Infinity;
     var min_x = Infinity;
     var layout = {annotations: []};
+    var margin = 0.25;
 
     for (var j = 0; j < input_files.length; j++) {
 
@@ -950,7 +1351,7 @@ function monthly_stab_prof(all_results, input_files, category, vertloc, basecolo
             },
             xaxis: {
                 title: xstring, 
-                range: [min_x-0.5*diff, max_x+0.5*diff]
+                range: [min_x-margin*diff, max_x+margin*diff]
             },
             hovermode: "closest"
         };
@@ -963,7 +1364,7 @@ function monthly_stab_prof(all_results, input_files, category, vertloc, basecolo
         layout["hovermode"] = "closest";
         
         for(var i = 0; i < input_files.length; i++) {
-            layout["xaxis"+(i+2)]["range"] = [min_x-0.5*diff, max_x+0.5*diff];
+            layout["xaxis"+(i+2)]["range"] = [min_x-margin*diff, max_x+margin*diff];
             layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
                                     x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
                                     showarrow: true, arrowhead: 0, ax: 0, ay: 0});
@@ -988,7 +1389,7 @@ function monthly_stab_prof(all_results, input_files, category, vertloc, basecolo
             },
             xaxis: {
                 title: xstring, 
-                range: [min_x-0.5*diff, max_x+0.5*diff]
+                range: [min_x-margin*diff, max_x+margin*diff]
             },
             updatemenus: [{
                 y: 1, 
@@ -1017,6 +1418,7 @@ function hourly(all_results, input_files, category, basecolor) {
     var max_y = -Infinity;
     var min_y = Infinity;
     var layout = {annotations: []};
+    var margin = 0.25;
 
     for (var j = 0; j < input_files.length; j++) {
 
@@ -1091,7 +1493,7 @@ function hourly(all_results, input_files, category, basecolor) {
         title: title_string,
         yaxis: {
             title: ystring,
-            range: [min_y-0.5*diff, max_y+0.5*diff]
+            range: [min_y-margin*diff, max_y+margin*diff]
         },
         xaxis: {
             title: xstring, 
@@ -1116,6 +1518,7 @@ function monthly_hourly(all_results, input_files, category, basecolor, format, r
     var max_y = -Infinity;
     var min_y = Infinity;
     var layout = {annotations: []};
+    var margin = 0.25;
 
     for (var j = 0; j < input_files.length; j++) {
 
@@ -1262,7 +1665,7 @@ function monthly_hourly(all_results, input_files, category, basecolor, format, r
             title: title_string,
             yaxis: {
                 title: ystring,
-                range: [min_y-0.5*diff, max_y+0.5*diff]
+                range: [min_y-margin*diff, max_y+margin*diff]
             },
             xaxis: {
                 title: xstring, 
@@ -1278,7 +1681,7 @@ function monthly_hourly(all_results, input_files, category, basecolor, format, r
         
         for(var i = 0; i < input_files.length; i++) {
             layout["xaxis"+(i+2)]["range"] = [0, 24];
-            layout["yaxis"+(i+2)]["range"] = [min_y-0.5*diff, max_y+0.5*diff];
+            layout["yaxis"+(i+2)]["range"] = [min_y-margin*diff, max_y+margin*diff];
             layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
                                     x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
                                     showarrow: true, arrowhead: 0, ax: 0, ay: 0});
@@ -1298,7 +1701,7 @@ function monthly_hourly(all_results, input_files, category, basecolor, format, r
             title: title_string,
             yaxis: {
                 title: ystring,
-                range: [min_y-0.5*diff, max_y+0.5*diff]
+                range: [min_y-margin*diff, max_y+margin*diff]
             },
             xaxis: {
                 title: xstring, 
@@ -1321,14 +1724,15 @@ function monthly_hourly(all_results, input_files, category, basecolor, format, r
 // Rose Fig
 
 function rose_fig(all_results, input_files, category, vertloc, basecolor, bins, bin_arrange, nsector) {
+    
     // Set up data
     var graphish = []; 
+    var margin = 0.25;
 
     var object1 = process_data(all_results, 0);
     var object2 = edit_met_data(object1);
     var cate_info = get_catinfo(object2);
     var metdat = object2;
-    console.log(vertloc);
 
     [dircol, a, b] = get_vertical_locations(cate_info["columns"]["direction"], {location: vertloc});
     [varcol, vertlocs, c] = get_vertical_locations(cate_info["columns"][category], {location:vertloc});
@@ -1450,6 +1854,7 @@ function rose_fig(all_results, input_files, category, vertloc, basecolor, bins, 
 
 // // Set up data
 // var vertloc = 87;
+// var margin = 0.25;
 // var category = "speed";
 // var bins = 6;
 // var nsector = 32;
@@ -1691,9 +2096,8 @@ function rose_fig(all_results, input_files, category, vertloc, basecolor, bins, 
 function winddir_scatter(all_results, input_files, category, vertloc, basecolor) {
     
     // Set up data
-    var exclude_angles = [46,228];
-    var basecolor = "red";
     var graphish = []; 
+    var margin = 0.25;
 
     for (var j = 0; j < input_files.length; j++) {
 
@@ -1731,7 +2135,7 @@ function winddir_scatter(all_results, input_files, category, vertloc, basecolor)
     shapes.push({type: "rect", xref: "paper", yref: "paper", 
                 x0: (exclude_angles[0]/360), y0: 0, 
                 x1: (exclude_angles[1]/360), y1: 1, 
-                fillcolor: colors[basecolor][0], 
+                fillcolor: colors["red"][0], 
                 opacity: 0.2, 
                 line: {width: 0}
                 });
@@ -1759,12 +2163,11 @@ function winddir_scatter(all_results, input_files, category, vertloc, basecolor)
 function monthly_winddir_scatter(all_results, input_files, category, vertloc, basecolor, format, rows, cols) {
     
     // Set up data
-    var exclude_angles = [46,228];
-    var basecolor = "cycle";
     var graphish = []; 
     var layout = {annotations: []};
     var max_y = -Infinity;
     var min_y = Infinity;
+    var margin = 0.25;
 
     for (var j = 0; j < input_files.length; j++) {
 
@@ -1840,6 +2243,8 @@ function monthly_winddir_scatter(all_results, input_files, category, vertloc, ba
     var shapes = [];
     var colors = get_nrelcolors();
 
+    var diff = max_y - min_y;
+
     if ((format === "dropdown") | (format === "slider")) {
 
         for (var j = 0; j < input_files.length; j++){
@@ -1858,8 +2263,8 @@ function monthly_winddir_scatter(all_results, input_files, category, vertloc, ba
                         label: input_files[j].replace(/_|.csv/g," ")
                         });
             shapes.push({type: "rect", xref: "x"+(j+2), yref: "y"+(j+2), 
-                        x0: exclude_angles[0], y0: 0, 
-                        x1: exclude_angles[1], y1: max_y, 
+                        x0: exclude_angles[0], y0: min_y-margin*diff, 
+                        x1: exclude_angles[1], y1: max_y+margin*diff, 
                         fillcolor: colors["red"][0], 
                         opacity: 0.2, 
                         line: {width: 0}
@@ -1879,8 +2284,8 @@ function monthly_winddir_scatter(all_results, input_files, category, vertloc, ba
         for (var j = 0; j < input_files.length; j++){
 
             shapes.push({type: "rect", xref: "x"+(j+2), yref: "y"+(j+2), 
-                        x0: exclude_angles[0], y0: 0, 
-                        x1: exclude_angles[1], y1: max_y, 
+                        x0: exclude_angles[0], y0: min_y-margin*diff, 
+                        x1: exclude_angles[1], y1: max_y+margin*diff, 
                         fillcolor: colors["red"][0], 
                         opacity: 0.2, 
                         line: {width: 0}
@@ -1909,7 +2314,7 @@ function monthly_winddir_scatter(all_results, input_files, category, vertloc, ba
             title: title_string,
             yaxis: {
                 title: ystring,
-                range: [min_y-0.5*diff, max_y+0.5*diff]
+                range: [min_y-margin*diff, max_y+margin*diff]
             },
             xaxis: {
                 title: xstring, 
@@ -1928,7 +2333,7 @@ function monthly_winddir_scatter(all_results, input_files, category, vertloc, ba
         
         for(var i = 0; i < input_files.length; i++) {
             layout["xaxis"+(i+2)]["range"] = [0, 360];
-            layout["yaxis"+(i+2)]["range"] = [min_y-0.5*diff, max_y+0.5*diff];
+            layout["yaxis"+(i+2)]["range"] = [min_y-margin*diff, max_y+margin*diff];
             layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
                                     x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
                                     showarrow: true, arrowhead: 0, ax: 0, ay: 0});
@@ -1950,7 +2355,7 @@ function monthly_winddir_scatter(all_results, input_files, category, vertloc, ba
             showlegend: false,
             yaxis: {
                 title: ystring,
-                range: [min_y-0.5*diff, max_y+0.5*diff]
+                range: [min_y-margin*diff, max_y+margin*diff]
             },
             xaxis: {
                 title: xstring, 
@@ -1983,6 +2388,7 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
     var graphish = []; 
     var max_y = -Infinity;
     var min_y = Infinity;
+    var margin = 0.25;
 
     // User input
     var one_plot = true;
@@ -2000,7 +2406,7 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
     [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
 
     var stabconds = get_stabconds();
-    var colors = get_colors(stabconds.length, {basecolor: basecolor});
+    var other_colors = get_colors(stabconds.length, {basecolor: basecolor});
 
     for (var cond = 0; cond < stabconds.length; cond++) {
 
@@ -2032,7 +2438,7 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
                 y: plotdat_y,
                 mode: "markers",
                 marker: {
-                    color: colors[cond]
+                    color: other_colors[cond]
                 },
                 type: "scatter",
                 name: stabconds[cond],
@@ -2045,7 +2451,7 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
                 y: plotdat_y,
                 mode: "markers",
                 marker: {
-                    color: colors[cond]
+                    color: other_colors[cond]
                 },
                 type: "scatter",
                 name: stabconds[cond],
@@ -2063,14 +2469,16 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
 
     var diff = max_y - min_y;
 
+    var colors = get_nrelcolors();
+
     if (one_plot) {
 
         var layout = {
-            shapes: [{type: "rect", xref: "paper", yref: "paper", 
-                    x0: (exclude_angles[0]/360), y0: 0, 
-                    x1: (exclude_angles[1]/360), y1: 1, 
-                    fillcolor: colors[j], 
-                    opacity: 0.2/stabconds.length, 
+            shapes: [{type: "rect", xref: "xaxis", yref: "yaxis", 
+                    x0: exclude_angles[0], y0: min_y-margin*diff, 
+                    x1: exclude_angles[1], y1: max_y+margin*diff, 
+                    fillcolor: colors["red"][0], 
+                    opacity: 0.2, 
                     line: {width: 0}
             }],
             hovermode: "closest",
@@ -2078,7 +2486,7 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
             title: title_string,
             yaxis: {
                 title: ystring,
-                range: [min_y-0.5*diff, max_y+0.5*diff]
+                range: [min_y-margin*diff, max_y+margin*diff]
             },
             xaxis: {
                 title: xstring, 
@@ -2110,7 +2518,7 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
             shapes.push({type: "rect", xref: "paper", yref: "paper", 
                         x0: (exclude_angles[0]/360), y0: 0, 
                         x1: (exclude_angles[1]/360), y1: 1, 
-                        fillcolor: colors[j], 
+                        fillcolor: colors["red"][0], 
                         opacity: 0.2/stabconds.length, 
                         line: {width: 0}
                         });
@@ -2128,7 +2536,7 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
             title: title_string,
             yaxis: {
                 title: ystring,
-                range: [min_y-0.5*diff, max_y+0.5*diff]
+                range: [min_y-margin*diff, max_y+margin*diff]
             },
             xaxis: {
                 title: xstring, 
@@ -2144,119 +2552,180 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
 
 // ///////////////////////////////////////////////////////////////
 
-// // Groupby Winddir Scatter 
+// Groupby Winddir Scatter 
 
-// // Set up data
-// var vertloc = 87;
-// var nbins = 5;
-// var category = "ti";
-// var abscissa = "speed";
-// var group_by = "turbulent kinetic energy";
-// var basecolor = "span";
-// var graphish = []; 
+function groupby_winddir_scatter(all_results, input_files, category, abscissa, group_by, vertloc, basecolor, nbins) {
 
-// // Convert CSV to JSON ... need to create dynamic labels in
-// // place of 7 and 10
-// var arrays = all_results[0].data;
-// var keys = arrays[7];
-// var values = arrays.slice(10);
+    // Set up data
+    var graphish = []; 
+    var max_x = -Infinity;
+    var min_x = Infinity
+    var max_y = -Infinity;
+    var min_y = Infinity;
+    var margin = 0.25;
 
-// var object1 = new Object();
-// // remove -1 in code with QC data
-// for (k = 0; k < (keys.length-1); k++) {
-//     var new_values = [];
-//     for (v = 0; v < values.length; v++) {
-//         new_values.push(values[v][k]);
-//     }
-//     if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//         object1[keys[k]] = new_values;
-//     } else {
-//         object1[keys[k]+"_adv"] = new_values;
-//     }
-// }       
+    var object1 = process_data(all_results, 0);    
 
-// var object2 = edit_met_data(object1);
-// var cate_info = get_catinfo(object2);
-// //[stab_conds, stab_cats, metdat] = flag_stability(object2);
-// //var cate_info = get_catinfo(metdat);
-// var metdat = object2;
+    if ((category === "stability flag") | (abscissa === "stability flag") | (group_by === "stability flag")) {
 
-// var varcol, vertlocs, groupcol, abscol, a, b, c, d, e;
-// [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
-// [groupcol, b, c] = get_vertical_locations(cate_info["columns"][group_by], {location: vertloc});
-// [abscol, d, e] = get_vertical_locations(cate_info["columns"][abscissa], {location: vertloc});
+        var object2 = edit_met_data(object1);
+        [stab_conds, stab_cats, metdat] = flag_stability(object2);
+        var cate_info = get_catinfo(metdat);
 
-// var colors = get_colors(nbins, {basecolor: basecolor});
+    } else {
 
-// var data_temp = metdat[groupcol];
-// var test_mat = [];
-// for (var i = 0; i < data_temp.length; i += 1) {
-//     // until there is a faster way to remove these                        
-//     if ((parseFloat(data_temp[i]) != -999.0) && (data_temp[i] != null)) {
-//         test_mat.push(data_temp[i]);
-//     }
-// }
+        var object2 = edit_met_data(object1);
+        var cate_info = get_catinfo(object2);   
+        var metdat = object2;
 
-// var test_val = test_mat.sort(function(a, b) {return a - b;});
-// var temp = [], i;
-// for (i = 0; i < test_val.length; i += test_val.length/nbins) {
-//     temp.push(test_val.slice(i, i + test_val.length/nbins));
-// }
+    }
 
-// var bounds = {};
-// for (var leng = 0; leng < temp.length; leng++) {
-//     bounds[""+leng] = [];
-//     bounds[""+leng].push(temp[leng][0]);
-//     bounds[""+leng].push(temp[leng][temp[leng].length-1]);
-// }
+    var varcol, vertlocs, groupcol, abscol, a, b, c, d, e;
+    [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
+    [groupcol, b, c] = get_vertical_locations(cate_info["columns"][group_by], {location: vertloc});
+    [abscol, d, e] = get_vertical_locations(cate_info["columns"][abscissa], {location: vertloc});
 
-// for (var bd = 0; bd < Object.keys(bounds).length; bd++) {
-//     x_dat = [];
-//     y_dat = [];
-//     for (var datlen = 0; datlen < metdat[abscol].length; datlen++) {
-//         var x = parseFloat(metdat[abscol][datlen]);
-//         var y = parseFloat(metdat[varcol][datlen]);
-//         var f = parseFloat(metdat[groupcol][datlen]);
-        
-//         if ((x != -999.0) && (isNaN(x) === false) && (y != -999.0) && (isNaN(y) === false) && (f >= parseFloat(bounds[""+bd][0])) && (f <= parseFloat(bounds[""+bd][1]))) {
+    var colors = get_colors(nbins, {basecolor: basecolor});
 
-//             x_dat.push(x);
-//             y_dat.push(y);
+    var data_temp = metdat[groupcol];
+    var test_mat = [];
+    for (var i = 0; i < data_temp.length; i += 1) {
+        // until there is a faster way to remove these                        
+        if ((parseFloat(data_temp[i]) != -999.0) && (data_temp[i] != null)) {
+            test_mat.push(data_temp[i]);
+        }
+    }
 
-//         }
-//     }
+    var test_val = test_mat.sort(function(a, b) {return a - b;});
+    var temp = [], i;
+    for (i = 0; i < test_val.length; i += test_val.length/nbins) {
+        temp.push(test_val.slice(i, i + test_val.length/nbins));
+    }
 
-//     var trace = {
-//         x: x_dat,
-//         y: y_dat,
-//         mode: "markers",
-//         name: "[" + bounds[""+bd][0] + ":" + bounds[""+bd][1] + "]",
-//         marker: {
-//             color: colors[bd]
-//         }
-//     }
+    var bounds = {};
+    for (var leng = 0; leng < temp.length; leng++) {
+        bounds[""+leng] = [];
+        bounds[""+leng].push(temp[leng][0]);
+        bounds[""+leng].push(temp[leng][temp[leng].length-1]);
+    }
 
-//     graphish = graphish.concat(trace);
-// }
+    for (var bd = 0; bd < Object.keys(bounds).length; bd++) {
+        x_dat = [];
+        y_dat = [];
+        for (var datlen = 0; datlen < metdat[abscol].length; datlen++) {
+            var x = parseFloat(metdat[abscol][datlen]);
+            var y = parseFloat(metdat[varcol][datlen]);
+            var f = parseFloat(metdat[groupcol][datlen]);
+            
+            if ((x != -999.0) && (isNaN(x) === false) && (y != -999.0) && (isNaN(y) === false) && (f >= parseFloat(bounds[""+bd][0])) && (f <= parseFloat(bounds[""+bd][1]))) {
 
-// // Set title and labels
-// title_string = "$$ \\text{Vertical Location = }" + vertloc + "\\text{m, Grouped by: }" + cate_info["labels"][group_by] + "$$";
-// //x_string = cate_info["labels"][abscissa];
-// x_string = "$$ " + cate_info["labels"][abscissa] + " $$";
-// y_string = "$$ " + cate_info["labels"][category] + " $$";
+                x_dat.push(x);
+                y_dat.push(y);
 
-// var layout = {
-//     title: title_string,
-//     xaxis: {
-//         title: x_string
-//     },
-//     yaxis: {
-//         title: y_string
-//     },
-//     hovermode: "closest"
-// }
+            }
+        }
 
-// Plotly.newPlot("chart", graphish, layout)
+        if (Math.max(...x_dat) > max_x) {
+            max_x = Math.max(...x_dat)
+        }
+
+        if (Math.min(...x_dat) < min_x) {
+            min_x = Math.min(...x_dat)
+        }
+
+        if (Math.max(...y_dat) > max_y) {
+            max_y = Math.max(...y_dat)
+        }
+
+        if (Math.min(...y_dat) < min_y) {
+            min_y = Math.min(...y_dat)
+        }
+
+        var trace = {
+            x: x_dat,
+            y: y_dat,
+            mode: "markers",
+            name: "[" + bounds[""+bd][0] + ":" + bounds[""+bd][1] + "]",
+            marker: {
+                color: colors[bd]
+            }
+        }
+
+        graphish = graphish.concat(trace);
+    }
+
+    // Set title and labels
+    var title_string = "$$ \\text{Vertical Location = }" + vertloc + "\\text{m, Grouped by: }" + cate_info["labels"][group_by] + "$$";
+    //x_string = cate_info["labels"][abscissa];
+    var x_string = "$$ " + cate_info["labels"][abscissa] + " $$";
+    var y_string = "$$ " + cate_info["labels"][category] + " $$";
+
+    if ((category === "direction") | (abscissa === "direction")) {
+
+        // Create shape to exclude angles, only takes in one set
+        // of a range of excluded angles
+        var exclude_angles = [46,228];
+        var shapes = [];
+        var colors = get_nrelcolors();
+
+        if (category === "direction") {
+
+            shapes.push({type: "rect", xref: "paper", yref: "paper", 
+                         x0: 0, y0: (exclude_angles[0]/360), 
+                         x1: 1, y1: (exclude_angles[1]/360), 
+                         fillcolor: colors["red"][0], 
+                         opacity: 0.2, 
+                         line: {width: 0}
+            });
+
+        }
+
+        if (abscissa === "direction") {
+
+            shapes.push({type: "rect", xref: "paper", yref: "paper", 
+            x0: (exclude_angles[0]/360), y0: 0, 
+            x1: (exclude_angles[1]/360), y1: 1, 
+            fillcolor: colors["red"][0], 
+            opacity: 0.2, 
+            line: {width: 0}
+            });
+
+        }
+
+        var layout = {
+            title: title_string,
+            shapes: shapes,
+            xaxis: {
+                title: x_string,
+                range: [min_x-margin*diffx, max_x+margin*diffx]
+            },
+            yaxis: {
+                title: y_string,
+                range: [min_y-margin*diffy, max_y+margin*diffy]
+            },
+            hovermode: "closest"
+        }
+
+    } else {
+
+        var layout = {
+            title: title_string,
+            xaxis: {
+                title: x_string,
+                range: [min_x-margin*diffx, max_x+margin*diffx]
+            },
+            yaxis: {
+                title: y_string,
+                range: [min_y-margin*diffy, max_y+margin*diffy]
+            },
+            hovermode: "closest"
+        }
+
+    }
+
+    return [graphish, layout];
+
+}
 
 // if (graphish.length < nbins) {
 //     alert("It appears there is missing data, some traces are missing.");
@@ -2264,268 +2733,444 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
 
 // ///////////////////////////////////////////////////////////////
 
-// // Monthly Groupby Winddir Scatter 
+// Monthly Groupby Winddir Scatter 
 
-// // Set up data
-// var vertloc = 100;
-// var nbins = 5;
-// var category = "ti";
-// var abscissa = "speed";
-// var group_by = "turbulent kinetic energy";
-// var basecolor = "span";
-// var graphish = []; 
-// var max_x = 0;
-// var max_y = 0;
-// var format = "grid";
-// var layout = {annotations: []};
-// var full_mat = []; 
-// var met_obj = {};
+function monthly_groupby_winddir_scatter (all_results, input_files, category, abscissa, group_by, vertloc, basecolor, nbins, format, rows, cols) {
 
-// for (var j = 0; j < input_files.length; j++) {
-//     // Convert CSV to JSON ... need to create dynamic labels in
-//     // place of 7 and 10
-//     var arrays = all_results[j].data;
-//     var keys = arrays[7];
-//     var values = arrays.slice(10);
+    // Set up data
+    var max_x = -Infinity;
+    var min_x = Infinity
+    var max_y = -Infinity;
+    var min_y = Infinity;
+    var margin = 0.25;
 
-//     var object1 = new Object();
-//     // remove -1 in code with QC data
-//     for (k = 0; k < (keys.length-1); k++) {
-//         var new_values = [];
-//         for (v = 0; v < values.length; v++) {
-//             new_values.push(values[v][k]);
-//         }
-//         if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//             object1[keys[k]] = new_values;
-//         } else {
-//             object1[keys[k]+"_adv"] = new_values;
-//         }
-//     }       
+    var graphish = []; 
+    var layout = {annotations: []};
+    var full_mat = []; 
+    var met_obj = {};
 
-//     var object2 = edit_met_data(object1);
-//     var cate_info = get_catinfo(object2);
-//     var metdat = object2;
+    for (var j = 0; j < input_files.length; j++) {
+        // Convert CSV to JSON ... need to create dynamic labels in
+        // place of 7 and 10
+        var arrays = all_results[j].data;
+        var keys = arrays[7];
+        var values = arrays.slice(10);
 
-//     var varcol, vertlocs, groupcol, abscol, a, b, c, d, e;
-//     [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
-//     [groupcol, b, c] = get_vertical_locations(cate_info["columns"][group_by], {location: vertloc});
-//     [abscol, d, e] = get_vertical_locations(cate_info["columns"][abscissa], {location: vertloc});
+        var object1 = new Object();
+        // remove -1 in code with QC data
+        for (k = 0; k < (keys.length-1); k++) {
+            var new_values = [];
+            for (v = 0; v < values.length; v++) {
+                new_values.push(values[v][k]);
+            }
+            if (Object.keys(object1).indexOf(keys[k]) == -1) {
+                object1[keys[k]] = new_values;
+            } else {
+                object1[keys[k]+"_adv"] = new_values;
+            }
+        }       
 
-//     var colors = get_colors(nbins, {basecolor: basecolor});
+        var object2 = edit_met_data(object1);
+        var cate_info = get_catinfo(object2);
+        var metdat = object2;
 
-//     var data_temp = metdat[groupcol];
-//     for (var i = 0; i < data_temp.length; i += 1) {
-//         // until there is a faster way to remove these                        
-//         if ((parseFloat(data_temp[i]) != -999.0) && (data_temp[i] != null)) {
-//             full_mat.push(data_temp[i]);
-//         }
-//     }
+        var varcol, vertlocs, groupcol, abscol, a, b, c, d, e;
+        [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
+        [groupcol, b, c] = get_vertical_locations(cate_info["columns"][group_by], {location: vertloc});
+        [abscol, d, e] = get_vertical_locations(cate_info["columns"][abscissa], {location: vertloc});
 
-//     met_obj[""+j] = metdat;
-// }
+        var colors = get_colors(nbins, {basecolor: basecolor});
 
-// var test_val = full_mat.sort(function(a, b) {return a - b;});
-// var temp = [], i;
-// for (i = 0; i < test_val.length; i += test_val.length/nbins) {
-//     temp.push(test_val.slice(i, i + test_val.length/nbins));
-// }
+        var data_temp = metdat[groupcol];
+        for (var i = 0; i < data_temp.length; i += 1) {
+            // until there is a faster way to remove these                        
+            if ((parseFloat(data_temp[i]) != -999.0) && (data_temp[i] != null)) {
+                full_mat.push(data_temp[i]);
+            }
+        }
 
-// var bounds = {};
-// for (var leng = 0; leng < temp.length; leng++) {
-//     bounds[""+leng] = [];
-//     bounds[""+leng].push(temp[leng][0]);
-//     bounds[""+leng].push(temp[leng][temp[leng].length-1]);
-// }
+        met_obj[""+j] = metdat;
+    }
 
-// for (var j = 0; j < input_files.length; j++) {
-//     for (var bd = 0; bd < Object.keys(bounds).length; bd++) {
-//         x_dat = [];
-//         y_dat = [];
-//         var metdat = met_obj[""+j];
-//         for (var datlen = 0; datlen < metdat[abscol].length; datlen++) {
-//             var x = parseFloat(metdat[abscol][datlen]);
-//             var y = parseFloat(metdat[varcol][datlen]);
-//             var f = parseFloat(metdat[groupcol][datlen]);
-            
-//             if ((x != -999.0) && (isNaN(x) === false) && (y != -999.0) && (isNaN(y) === false) && (f >= parseFloat(bounds[""+bd][0])) && (f <= parseFloat(bounds[""+bd][1]))) {
+    var test_val = full_mat.sort(function(a, b) {return a - b;});
+    var temp = [], i;
+    for (i = 0; i < test_val.length; i += test_val.length/nbins) {
+        temp.push(test_val.slice(i, i + test_val.length/nbins));
+    }
 
-//                 x_dat.push(x);
-//                 y_dat.push(y);
+    var bounds = {};
+    for (var leng = 0; leng < temp.length; leng++) {
+        bounds[""+leng] = [];
+        bounds[""+leng].push(temp[leng][0]);
+        bounds[""+leng].push(temp[leng][temp[leng].length-1]);
+    }
 
-//             }
-//         }
+    for (var j = 0; j < input_files.length; j++) {
+        for (var bd = 0; bd < Object.keys(bounds).length; bd++) {
+            x_dat = [];
+            y_dat = [];
+            var metdat = met_obj[""+j];
+            for (var datlen = 0; datlen < metdat[abscol].length; datlen++) {
+                var x = parseFloat(metdat[abscol][datlen]);
+                var y = parseFloat(metdat[varcol][datlen]);
+                var f = parseFloat(metdat[groupcol][datlen]);
+                
+                if ((x != -999.0) && (isNaN(x) === false) && (y != -999.0) && (isNaN(y) === false) && (f >= parseFloat(bounds[""+bd][0])) && (f <= parseFloat(bounds[""+bd][1]))) {
 
-//         if (Math.max(...x_dat) > max_x) {
-//             max_x = Math.max(...x_dat)
-//         }
+                    x_dat.push(x);
+                    y_dat.push(y);
 
-//         if (Math.max(...y_dat) > max_y) {
-//             max_y = Math.max(...y_dat)
-//         }
+                }
+            }
 
-//         if ((format === "dropdown") | (format === "slider")) {
+            if (Math.max(...x_dat) > max_x) {
+                max_x = Math.max(...x_dat)
+            }
 
-//             var trace = {
-//                 x: x_dat,
-//                 y: y_dat,
-//                 mode: "markers",
-//                 name: "[" + bounds[""+bd][0] + ":" + bounds[""+bd][1] + "]",
-//                 marker: {
-//                     color: colors[bd]
-//                 },
-//                 visible: j === 0
-//             };
-//             graphish = graphish.concat(trace);
+            if (Math.min(...x_dat) < min_x) {
+                min_x = Math.min(...x_dat)
+            }
 
-//         }
+            if (Math.max(...y_dat) > max_y) {
+                max_y = Math.max(...y_dat)
+            }
 
-//         if (format === "grid") {
-            
-//             var trace = {
-//                 x: x_dat,
-//                 y: y_dat,
-//                 xaxis: "x"+(j+2),
-//                 yaxis: "y"+(j+2),
-//                 mode: "markers",
-//                 name: "[" + bounds[""+bd][0] + ":" + bounds[""+bd][1] + "]",
-//                 marker: {
-//                     color: colors[bd]
-//                 },
-//                 showlegend: j === 0
-//             };
-//             graphish = graphish.concat(trace);
+            if (Math.min(...y_dat) < min_y) {
+                min_y = Math.min(...y_dat)
+            }
 
-//         }
-//     }
+            if ((format === "dropdown") | (format === "slider")) {
 
-//     if (format === "grid") {
+                var trace = {
+                    x: x_dat,
+                    y: y_dat,
+                    mode: "markers",
+                    name: "[" + bounds[""+bd][0] + ":" + bounds[""+bd][1] + "]",
+                    marker: {
+                        color: colors[bd]
+                    },
+                    visible: j === 0
+                };
+                graphish = graphish.concat(trace);
 
-//         layout["yaxis" + (j+2)] = {
-//             domain: calcDomain_y(Math.floor(j/4),3)
-//         };
+            }
 
-//         layout["xaxis" + (j+2)] = {
-//             domain: calcDomain_x(j%4,4)
-//         };
+            if (format === "grid") {
+                
+                var trace = {
+                    x: x_dat,
+                    y: y_dat,
+                    xaxis: "x"+(j+2),
+                    yaxis: "y"+(j+2),
+                    mode: "markers",
+                    name: "[" + bounds[""+bd][0] + ":" + bounds[""+bd][1] + "]",
+                    marker: {
+                        color: colors[bd]
+                    },
+                    showlegend: j === 0
+                };
+                graphish = graphish.concat(trace);
 
-//     }   
-// }
+            }
+        }
 
-// buttons = [];
-// shapes = [];
+        if (format === "grid") {
 
-// if ((format === "dropdown") | (format === "slider")) {
+            layout["yaxis" + (j+2)] = {
+                domain: calcDomain_y(Math.floor(j/cols),rows)
+            };
 
-//     for (var j = 0; j < input_files.length; j++){
-//         // This array decides when to display a certain trace
-//         false_array = [];
+            layout["xaxis" + (j+2)] = {
+                domain: calcDomain_x(j%cols,cols)
+            };
 
-//         for(var i = 0; i < input_files.length; i++) {
-//             if (i == j) {
-//                 for (var iah = 0; iah < nbins; iah++) {
-//                     false_array.push(true);
-//                 }
-//             } else {
-//                 for (var iah = 0; iah < nbins; iah++) {
-//                     false_array.push(false);
-//                 }
-//             }  
-//         }
-//         buttons.push({method: 'restyle', args: ['visible', false_array], 
-//                       label: input_files[j].replace(/_|.csv/g," ")
-//                     });
-//     }
+        } 
 
-// }
+    }
 
-// if (format === "slider") {
+    var buttons = [];
+    var shapes = [];
+    var diffy = max_y - min_y;
+    var diffx = max_x - min_x;
 
-//     steps = buttons;
+    if ((format === "dropdown") | (format === "slider")) {
 
-// }
+        for (var j = 0; j < input_files.length; j++){
+            // This array decides when to display a certain trace
+            false_array = [];
 
-// // Set title and labels
-// title_string = "$$ \\text{Vertical Location = }" + vertloc + "\\text{m, Grouped by: }" + cate_info["labels"][group_by] + "$$";
-// x_string = "$$ " + cate_info["labels"][abscissa] + " $$";
-// y_string = "$$ " + cate_info["labels"][category] + " $$";
+            for(var i = 0; i < input_files.length; i++) {
+                if (i == j) {
+                    for (var iah = 0; iah < nbins; iah++) {
+                        false_array.push(true);
+                    }
+                } else {
+                    for (var iah = 0; iah < nbins; iah++) {
+                        false_array.push(false);
+                    }
+                }  
+            }
 
-// if (format === "slider") {
-    
-//     var layout = {
-//         sliders: [{
-//             pad: {t: 30},
-//             len: ((input_files.length)/12),
-//             steps: steps
-//         }],
-//         title: title_string,
-//         yaxis: {
-//             title: y_string,
-//             range: [0, 1.1*max_y]
-//         },
-//         xaxis: {
-//             //ticks: false,
-//             title: x_string,
-//             range: [0, 1.1*max_x]
-//         },
-//         hovermode: "closest"
-//     };
+            buttons.push({method: 'restyle', args: ['visible', false_array], 
+                        label: input_files[j].replace(/_|.csv/g," ")
+                        });
 
-// }
+            if ((category === "direction") | (abscissa === "direction")) {
 
-// if (format === "grid") {
+                // Create shape to exclude angles, only takes in one set
+                // of a range of excluded angles
+                var exclude_angles = [46,228];
+                var shapes = [];
+                var colors = get_nrelcolors();
 
-//     layout["title"] = title_string;
-//     layout["hovermode"] = "closest";
-//     // possible fix if other than 12 month periods
-//     index_mat = [8,9,10,11];
-    
-//     for(var i = 0; i < input_files.length; i++) {
-//         layout["xaxis"+(i+2)]["range"] = [0, 1.1*max_x];
-//         layout["yaxis"+(i+2)]["range"] = [0, 1.1*max_y];
-//         if (index_mat.indexOf(i) < 0) {
-//             layout["xaxis"+(i+2)]["anchor"] = "x"+(index_mat[i%3]);
-//         }
-//         // } else {
-//         //     layout["xaxis"+(i+2)]["anchor"] = false;
-//         // }
+                if (abscissa === "direction") {
+
+                    shapes.push({type: "rect", xref: "x"+(j+2), yref: "y"+(j+2), 
+                                 x0: exclude_angles[0], y0: min_y-margin*diffy, 
+                                 x1: exclude_angles[1], y1: max_y+margin*diffy, 
+                                 fillcolor: colors["red"][0], 
+                                 opacity: 0.2, 
+                                 line: {width: 0}
+                    });
+
+                }
+
+                if (category === "direction") {
+
+                    shapes.push({type: "rect", xref: "x"+(j+2), yref: "y"+(j+2), 
+                                 x0: min_x-margin*diffx, y0: exclude_angles[0], 
+                                 x1: max_x+margin*diffx, y1: exclude_angles[1], 
+                                 fillcolor: colors["red"][0], 
+                                 opacity: 0.2, 
+                                 line: {width: 0}
+                    });
+
+                }
+
+            }
+
+        }
+
+    }
+
+    if (format === "slider") {
+
+        steps = buttons;
+
+    }
+
+    if ((category === "direction") | (abscissa === "direction")) {
+
+        if (format === "grid") {
+
+            // Create shape to exclude angles, only takes in one set
+            // of a range of excluded angles
+            var exclude_angles = [46,228];
+            var shapes = [];
+            var colors = get_nrelcolors();
+
+            for (var j = 0; j < input_files.length; j++){
+
+                if (abscissa === "direction") {
+
+                    shapes.push({type: "rect", xref: "x"+(j+2), yref: "y"+(j+2), 
+                                x0: exclude_angles[0], y0: min_y-margin*diffy, 
+                                x1: exclude_angles[1], y1: max_y+margin*diffy, 
+                                fillcolor: colors["red"][0], 
+                                opacity: 0.2, 
+                                line: {width: 0}
+                    });
+
+                }
+
+                if (category === "direction") {
+
+                    shapes.push({type: "rect", xref: "x"+(j+2), yref: "y"+(j+2), 
+                                x0: min_x-margin*diffx, y0: exclude_angles[0], 
+                                x1: max_x+margin*diffx, y1: exclude_angles[1], 
+                                fillcolor: colors["red"][0], 
+                                opacity: 0.2, 
+                                line: {width: 0}
+                    });
+
+                }
+
+            }
+
+        }
+
+    }
+
+    // Set title and labels
+    var title_string = "$$ \\text{Vertical Location = }" + vertloc + "\\text{m, Grouped by: }" + cate_info["labels"][group_by] + "$$";
+    var x_string = "$$ " + cate_info["labels"][abscissa] + " $$";
+    var y_string = "$$ " + cate_info["labels"][category] + " $$";
+
+    if (format === "slider") {
+
+        if ((category === "direction") | (abscissa === "direction")) {
+
+            var layout = {
+                sliders: [{
+                    pad: {t: 30},
+                    len: ((input_files.length)/12),
+                    steps: steps
+                }],
+                title: title_string,
+                shapes: shapes,
+                yaxis: {
+                    title: y_string,
+                    range: [min_y-margin*diffy, max_y+margin*diffy]
+                },
+                xaxis: {
+                    title: x_string,
+                    range: [min_x-margin*diffx, max_x+margin*diffx]
+                },
+                hovermode: "closest"
+            };
+
+        } else {
         
+            var layout = {
+                sliders: [{
+                    pad: {t: 30},
+                    len: ((input_files.length)/12),
+                    steps: steps
+                }],
+                title: title_string,
+                yaxis: {
+                    title: y_string,
+                    range: [min_y-margin*diffy, max_y+margin*diffy]
+                },
+                xaxis: {
+                    title: x_string,
+                    range: [min_x-margin*diffx, max_x+margin*diffx]
+                },
+                hovermode: "closest"
+            };
 
-//         layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
-//                                 x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
-//                                 showarrow: true, arrowhead: 0, ax: 0, ay: 0});
-//     }
-//     layout.annotations.push({text: x_string, xref: "paper", yref: "paper",
-//                             x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
-//                             showarrow: false, font: {size: 12}});
-//     layout.annotations.push({text: y_string, xref: "paper", yref: "paper",
-//                             x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
-//                             showarrow: false, font: {size: 12}}); 
+        }
 
-// }
+    }
 
-// if (format === "dropdown") {
+    if (format === "grid") {
 
-//     var layout = {
-//         title: title_string,
-//         yaxis: {
-//             title: y_string,
-//             range: [0, 1.1*max_y]
-//         },
-//         xaxis: {
-//             title: x_string, 
-//             range: [0, 1.1*max_x]
-//         },
-//         updatemenus: [{
-//             y: 1, 
-//             yanchor: "top", 
-//             buttons: buttons
-//         }],
-//         hovermode: "closest"
-//     }
+        if ((category === "direction") | (abscissa === "direction")) {
 
-// }
+            layout["title"] = title_string;
+            layout["hovermode"] = "closest";
+            layout["shapes"] = shapes;
+            // possible fix if other than 12 month periods
+            //index_mat = [8,9,10,11];
+            
+            for(var i = 0; i < input_files.length; i++) {
 
-// Plotly.newPlot("chart", graphish, layout)
+                layout["xaxis"+(i+2)]["range"] = [min_x-margin*diffx, max_x+margin*diffx];
+                layout["yaxis"+(i+2)]["range"] = [min_y-margin*diffy, max_y+margin*diffy];
+
+                // if (index_mat.indexOf(i) < 0) {
+                //     layout["xaxis"+(i+2)]["anchor"] = "x"+(index_mat[i%3]);
+                // }
+
+                layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
+                                        x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
+                                        showarrow: true, arrowhead: 0, ax: 0, ay: 0});
+
+            }
+
+            layout.annotations.push({text: x_string, xref: "paper", yref: "paper",
+                                    x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
+                                    showarrow: false, font: {size: 12}});
+
+            layout.annotations.push({text: y_string, xref: "paper", yref: "paper",
+                                    x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
+                                    showarrow: false, font: {size: 12}}); 
+
+
+        } else {
+
+            layout["title"] = title_string;
+            layout["hovermode"] = "closest";
+            // possible fix if other than 12 month periods
+            //index_mat = [8,9,10,11];
+            
+            for(var i = 0; i < input_files.length; i++) {
+
+                layout["xaxis"+(i+2)]["range"] = [min_x-margin*diffx, max_x+margin*diffx];
+                layout["yaxis"+(i+2)]["range"] = [min_y-margin*diffy, max_y+margin*diffy];
+
+                // if (index_mat.indexOf(i) < 0) {
+                //     layout["xaxis"+(i+2)]["anchor"] = "x"+(index_mat[i%3]);
+                // }                
+
+                layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
+                                        x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
+                                        showarrow: true, arrowhead: 0, ax: 0, ay: 0});
+
+            }
+
+            layout.annotations.push({text: x_string, xref: "paper", yref: "paper",
+                                    x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
+                                    showarrow: false, font: {size: 12}});
+
+            layout.annotations.push({text: y_string, xref: "paper", yref: "paper",
+                                    x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
+                                    showarrow: false, font: {size: 12}}); 
+
+        }
+
+    }
+
+    if (format === "dropdown") {
+
+        if ((category === "direction") | (abscissa === "direction")) {
+
+            var layout = {
+                title: title_string,
+                yaxis: {
+                    title: y_string,
+                    range: [min_y-margin*diffy, max_y+margin*diffy]
+                },
+                xaxis: {
+                    title: x_string, 
+                    range: [min_x-margin*diffx, max_x+margin*diffx]
+                },
+                shapes: shapes,
+                updatemenus: [{
+                    y: 1, 
+                    yanchor: "top", 
+                    buttons: buttons
+                }],
+                hovermode: "closest"
+            }
+
+        } else {
+
+            var layout = {
+                title: title_string,
+                yaxis: {
+                    title: y_string,
+                    range: [min_y-margin*diffy, max_y+margin*diffy]
+                },
+                xaxis: {
+                    title: x_string, 
+                    range: [min_x-margin*diffx, max_x+margin*diffx]
+                },
+                updatemenus: [{
+                    y: 1, 
+                    yanchor: "top", 
+                    buttons: buttons
+                }],
+                hovermode: "closest"
+            }
+
+        }
+
+    }
+
+    return [graphish, layout];
+
+}
 
 // if (graphish.length < nbins*input_files.length) {
 //     alert("It appears there is missing data, some traces are missing.");
@@ -2533,1217 +3178,1096 @@ function stab_winddir_scatter(all_results, input_files, category, vertloc, basec
 
 // ///////////////////////////////////////////////////////////////
 
-// // Histogram
+// Histogram
 
-// // Set up data
-// var vertloc = 80;
-// var category = "speed";
-// var basecolor = "blue";
-// var graphish = []; 
-// var curvefit = "Weibull";
-// var layout = {annotations: []};
-
-// // Convert CSV to JSON ... need to create dynamic labels in
-// // place of 7 and 10
-// var arrays = all_results[0].data;
-// var keys = arrays[7];
-// var values = arrays.slice(10);
-
-// var object1 = new Object();
-// // remove -1 in code with QC data
-// for (k = 0; k < (keys.length-1); k++) {
-//     var new_values = [];
-//     for (v = 0; v < values.length; v++) {
-//         new_values.push(values[v][k]);
-//     }
-//     if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//         object1[keys[k]] = new_values;
-//     } else {
-//         object1[keys[k]+"_adv"] = new_values;
-//     }
-// }       
-
-// var object2 = edit_met_data(object1);
-// var cate_info = get_catinfo(object2);
-
-// var varcol, vertlocs, a;
-// [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
-
-// var hist_data = object2[varcol];
-
-// var min_hist = Math.min(...hist_data);
-// var max_hist = Math.max(...hist_data);
-// var filt_dat = hist_data.filter(Boolean);
-// var sum = 0;
-// for( var i = 0; i < filt_dat.length; i++ ){
-//     sum += parseFloat(filt_dat[i]);
-// }
-// var mean = sum/filt_dat.length;
-
-// var colors = get_nrelcolors();
-// var nbins = 35;
-
-// if (curvefit != "None") {
-
-//     var k = 0;
-//     var l = 0;
-
-//     if (curvefit === "Exponential") {
-
-//         k = 1;
-
-//     }
-
-//     if (curvefit === "Rayleigh") {
-
-//         k = 2;
-
-//     }
-
-//     if (curvefit === "Lognormal") {
-
-//         k = 2.5;
-
-//     }
-
-//     if (curvefit === "Normal") {
-
-//         k = 3.6;
-
-//     }
-
-//     if (curvefit === "Weibull") {
-
-//         var variance = 0;
-//         var n = filt_dat.length;
-//         var v1 = 0;
-//         var v2 = 0;
-
-//         if (n != 1) {
-
-//             for (var i = 0; i < n; i++) {
-//                 v1 = v1 + (filt_dat[i] - mean) * (filt_dat[i] - mean);
-//                 v2 = v2 + (filt_dat[i] - mean);
-//             }
-
-//             v2 = v2 * v2 / n;
-//             variance = (v1 - v2) / (n-1);
-
-//             if (variance < 0) { 
-//                 variance = 0; 
-//             }
+function hist(all_results, input_files, category, vertloc, basecolor, nbins, curvefit) {
     
-//             std_dev = Math.sqrt(variance);
+    // Set up data
+    var graphish = []; 
+    var layout = {annotations: []};
+    var margin = 0.25;
 
-//         }
+    var object1 = process_data(all_results, 0);   
+    var object2 = edit_met_data(object1);
+    var cate_info = get_catinfo(object2);
 
-//         k = Math.pow((0.9874/(std_dev/mean)),1.0983);
+    var varcol, vertlocs, a;
+    [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
 
-//     }            
+    var hist_data = object2[varcol];
 
-//     var arg = 1/k;
-//     l = mean / ((Math.sqrt(2*Math.PI*arg))*(Math.pow((arg/Math.E),arg)));
+    var min_hist = Math.min(...hist_data);
+    var max_hist = Math.max(...hist_data);
+    var filt_dat = hist_data.filter(Boolean);
+    var sum = 0;
+    for( var i = 0; i < filt_dat.length; i++ ){
+        sum += parseFloat(filt_dat[i]);
+    }
+    var mean = sum/filt_dat.length;
 
-//     var xdat = [];
-//     var ydat = [];
-//     for (var iter = min_hist; iter < max_hist; iter += ((max_hist-min_hist)/1000)) {
-//         xdat.push(iter);
-//         var wb = (k/l)*(Math.pow((iter/l),k-1))*Math.pow(Math.E,-Math.pow((iter/l),k));
-//         ydat.push(wb);
-//     }
+    var colors = get_nrelcolors();
 
-//     var trace_cv = {
-//         x: xdat,
-//         y: ydat,
-//         mode: "lines",
-//         line: {
-//             color: "rgb(0, 0, 0)"
-//         },
-//         name: curvefit,
-//     };
+    if (curvefit != "None") {
 
-//     graphish = graphish.concat(trace_cv);
+        var k = 0;
+        var l = 0;
 
-//     layout["annotations"].push({text: "Shape Parameter: " + k.toFixed(2), xref: "paper", yref: "paper",
-//                                 x: 0.9, y: 0.9, showarrow: false, font: {size: 16}}); 
+        if (curvefit === "Exponential") {
 
-//     layout["annotations"].push({text: "Scale Parameter: " + l.toFixed(2), xref: "paper", yref: "paper",
-//                                 x: 0.9, y: 0.8, showarrow: false, font: {size: 16}});                                     
+            k = 1;
 
-// }
+        }
 
-// var trace = {
-//     x: hist_data,
-//     type: "histogram",
-//     xbins: {
-//         start: min_hist,
-//         end: max_hist,
-//         size: (max_hist - min_hist)/(nbins)
-//     },
-//     histnorm: "probability",
-//     marker: {
-//         color: colors[basecolor][0],
-//         line: {
-//             width: 2
-//         }
-//     },
-//     name: input_files[0].split("_")[1].split(".")[0],
-// };
+        if (curvefit === "Rayleigh") {
 
-// graphish = graphish.concat(trace);
+            k = 2;
 
-// xstring = "$$" + cate_info["labels"][category] + "$$";
-// ystring = "$$ \\text{Frequency} [\\%] $$";
-// title_string = "$$ \\text{Frequency Histogram of_}" + xstring.replace("$$"," ");
+        }
 
-// layout["title"] =  title_string;
-// layout["xaxis"] = {title: xstring};
-// layout["yaxis"] = {title: ystring};
-// layout["hovermode"] = "closest";
+        if (curvefit === "Lognormal") {
 
-// Plotly.newPlot("chart", graphish, layout)
+            k = 2.5;
 
-// ///////////////////////////////////////////////////////////////
+        }
 
-// // Monthly Histogram
+        if (curvefit === "Normal") {
 
-// // Set up data
-// var vertloc = 87;
-// var category = "speed";
-// var basecolor = "blue";
-// var graphish = []; 
-// var max_x = 0;
-// var layout = {annotations: []};
-// var nbins = 35;
-// var max_y = 0.3;
+            k = 3.6;
 
-// // User input
-// var format = "grid";
+        }
 
-// for (var j = 0; j < input_files.length; j++) {
-//     // Convert CSV to JSON ... need to create dynamic labels in
-//     // place of 7 and 10
-//     var arrays = all_results[j].data;
-//     var keys = arrays[7];
-//     var values = arrays.slice(10);
+        if (curvefit === "Weibull") {
 
-//     var object1 = new Object();
-//     // remove -1 in code with QC data
-//     for (k = 0; k < (keys.length-1); k++) {
-//         var new_values = [];
-//         for (v = 0; v < values.length; v++) {
-//             new_values.push(values[v][k]);
-//         }
-//         if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//             object1[keys[k]] = new_values;
-//         } else {
-//             object1[keys[k]+"_adv"] = new_values;
-//         }
-//     }       
+            var variance = 0;
+            var n = filt_dat.length;
+            var v1 = 0;
+            var v2 = 0;
 
-//     var object2 = edit_met_data(object1);
-//     var cate_info = get_catinfo(object2);
+            if (n != 1) {
 
-//     var varcol, vertlocs, a;
-//     [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
+                for (var i = 0; i < n; i++) {
+                    v1 = v1 + (filt_dat[i] - mean) * (filt_dat[i] - mean);
+                    v2 = v2 + (filt_dat[i] - mean);
+                }
 
-//     var hist_data = object2[varcol];
-    
-//     var colors = get_colors(input_files.length, {basecolor: basecolor});
-    
+                v2 = v2 * v2 / n;
+                variance = (v1 - v2) / (n-1);
 
-//     if (Math.max(...hist_data) > max_x) {
-//         max_x = Math.max(...hist_data);
-//     }
-
-//     if ((format === "dropdown") | (format === "slider")) {
-
-//         var trace = {
-//             x: hist_data,
-//             type: "histogram",
-//             xbins: {
-//                 start: Math.min(...hist_data),
-//                 end: Math.max(...hist_data),
-//                 size: (Math.max(...hist_data) - Math.min(...hist_data))/(nbins)
-//             },
-//             histnorm: "probability",
-//             marker: {
-//                 color: colors[j],
-//                 line: {
-//                     width: 2
-//                 }
-//             },
-//             name: input_files[j].split("_")[1].split(".")[0],
-//             visible: j === 0
-//         };
-//         graphish = graphish.concat(trace);
-
-//     }
-
-//     if (format === "grid") {
+                if (variance < 0) { 
+                    variance = 0; 
+                }
         
-//         var trace = {
-//             x: hist_data,
-//             xaxis: "x" + (j+2),
-//             yaxis: "y" + (j+2),
-//             type: "histogram",
-//             xbins: {
-//                 start: Math.min(...hist_data),
-//                 end: Math.max(...hist_data),
-//                 size: (Math.max(...hist_data) - Math.min(...hist_data))/(nbins)
-//             },
-//             histnorm: "probability",
-//             marker: {
-//                 color: colors[j],
-//                 line: {
-//                     width: 2
-//                 }
-//             },
-//             name: input_files[j].split("_")[1].split(".")[0],
-//         };
-//         graphish = graphish.concat(trace);
+                std_dev = Math.sqrt(variance);
 
-//     }
+            }
 
-//     if (format === "grid") {
+            k = Math.pow((0.9874/(std_dev/mean)),1.0983);
 
-//         layout["yaxis" + (j+2)] = {
-//             domain: calcDomain_y(Math.floor(j/4),3)
-//         };
+        }            
 
-//         layout["xaxis" + (j+2)] = {
-//             domain: calcDomain_x(j%4,4)
-//         };
+        var arg = 1/k;
+        l = mean / ((Math.sqrt(2*Math.PI*arg))*(Math.pow((arg/Math.E),arg)));
 
-//     }        
+        var xdat = [];
+        var ydat = [];
+        for (var iter = min_hist; iter < max_hist; iter += ((max_hist-min_hist)/1000)) {
+            xdat.push(iter);
+            var wb = (k/l)*(Math.pow((iter/l),k-1))*Math.pow(Math.E,-Math.pow((iter/l),k));
+            ydat.push(wb);
+        }
 
-// }
+        var trace_cv = {
+            x: xdat,
+            y: ydat,
+            mode: "lines",
+            line: {
+                color: "rgb(0, 0, 0)"
+            },
+            name: curvefit,
+        };
 
-// buttons = [];
-// shapes = [];
+        graphish = graphish.concat(trace_cv);
 
-// if ((format === "dropdown") | (format === "slider")) {
+        layout["annotations"].push({text: "Shape Parameter: " + k.toFixed(2), xref: "paper", yref: "paper",
+                                    x: 0.9, y: 0.9, showarrow: false, font: {size: 16}}); 
 
-//     for (var j = 0; j < input_files.length; j++){
-//         // This array decides when to display a certain trace
-//         false_array = [];
+        layout["annotations"].push({text: "Scale Parameter: " + l.toFixed(2), xref: "paper", yref: "paper",
+                                    x: 0.9, y: 0.8, showarrow: false, font: {size: 16}});                                     
 
-//         for(var i = 0; i < input_files.length; i++) {
-//             if (i == j) {
-//                 false_array.push(true);
-//             } else {
-//                 false_array.push(false);
-//             }  
-//         }
-//         buttons.push({method: 'restyle', args: ['visible', false_array], 
-//                       label: input_files[j].replace(/_|.csv/g," ")
-//                     });
-//     }
+    }
 
-// }
+    var trace = {
+        x: hist_data,
+        type: "histogram",
+        xbins: {
+            start: min_hist,
+            end: max_hist,
+            size: (max_hist - min_hist)/(nbins)
+        },
+        histnorm: "probability",
+        marker: {
+            color: colors[basecolor][0],
+            line: {
+                width: 2
+            }
+        },
+        name: input_files[0].split("_")[1].split(".")[0],
+    };
 
-// if (format === "slider") {
+    graphish = graphish.concat(trace);
 
-//     steps = buttons;
+    xstring = "$$" + cate_info["labels"][category] + "$$";
+    ystring = "$$ \\text{Frequency} [\\%] $$";
+    title_string = "$$ \\text{Frequency Histogram of }" + xstring.replace("$$"," ");
 
-// }
+    layout["title"] =  title_string;
+    layout["xaxis"] = {title: xstring};
+    layout["yaxis"] = {title: ystring};
+    layout["hovermode"] = "closest";
 
-// xstring = "$$" + cate_info["labels"][category] + "$$";
-// ystring = "$$ \\text{Frequency} [\\%] $$";
-// title_string = "$$ \\text{Frequency Histogram of_}" + xstring.replace("$$"," ");
+    return [graphish, layout];
 
-// if (format === "slider") {
-    
-//     var layout = {
-//         sliders: [{
-//             pad: {t: 30},
-//             len: ((input_files.length)/12),
-//             steps: steps
-//         }],
-//         showlegend: false,
-//         title: title_string,
-//         yaxis: {
-//             title: ystring,
-//             range: [0, max_y]
-//         },
-//         xaxis: {
-//             title: xstring,
-//             range: [0, 1.1*max_x]
-//         }
-//     };
-
-// }
-
-// if (format === "grid") {
-
-//     layout["title"] = title_string;
-//     layout["showlegend"] = false;
-    
-//     for(var i = 0; i < input_files.length; i++) {
-//         layout["xaxis"+(i+2)]["range"] = [0, 1.1*max_x];
-//         layout["yaxis"+(i+2)]["range"] = [0, max_y];
-//         layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
-//                                 x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
-//                                 showarrow: true, arrowhead: 0, ax: 0, ay: 0});
-//     }
-//     layout.annotations.push({text: xstring, xref: "paper", yref: "paper",
-//                             x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
-//                             showarrow: false, font: {size: 12}});
-//     layout.annotations.push({text: ystring, xref: "paper", yref: "paper",
-//                             x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
-//                             showarrow: false, font: {size: 12}}); 
-
-// }
-
-// if (format === "dropdown") {
-
-//     var layout = {
-//         title: title_string,
-//         showlegend: false,
-//         yaxis: {
-//             title: ystring,
-//             range: [0, max_y]
-//         },
-//         xaxis: {
-//             title: xstring, 
-//             range: [0, 1.1*max_x]
-//         },
-//         updatemenus: [{
-//             y: 1, 
-//             yanchor: "top", 
-//             buttons: buttons
-//         }]
-//     }
-
-// }
-
-// Plotly.newPlot("chart", graphish, layout)
+}
 
 // ///////////////////////////////////////////////////////////////
 
-// // Histogram by Stability
+// Monthly Histogram
 
-// // Set up data
-// var vertloc = 87;
-// var category = "speed";
-// var basecolor = "span";
-// var graphish = []; 
-// // var curvefit = "Weibull";
-// // var layout = {annotations: []};
+function monthly_hist(all_results, input_files, category, vertloc, basecolor, nbins, format, rows, cols) {
 
-// // Convert CSV to JSON ... need to create dynamic labels in
-// // place of 7 and 10
-// var arrays = all_results[0].data;
-// var keys = arrays[7];
-// var values = arrays.slice(10);
+    // Set up data
+    var graphish = []; 
+    var max_x = -Infinity;
+    var min_x = Infinity;
+    var layout = {annotations: []};
+    var max_y = 0.3;
+    var margin = 0.25;
 
-// var object1 = new Object();
-// // remove -1 in code with QC data
-// for (k = 0; k < (keys.length-1); k++) {
-//     var new_values = [];
-//     for (v = 0; v < values.length; v++) {
-//         new_values.push(values[v][k]);
-//     }
-//     if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//         object1[keys[k]] = new_values;
-//     } else {
-//         object1[keys[k]+"_adv"] = new_values;
-//     }
-// }       
+    for (var j = 0; j < input_files.length; j++) {
 
-// var object2 = edit_met_data(object1);
+        var object1 = process_data(all_results, j);    
+        var object2 = edit_met_data(object1);
+        var cate_info = get_catinfo(object2);
 
-// var stab_conds, stab_cats, metdat;
-// [stab_conds, stab_cats, metdat] = flag_stability(object2);
+        var varcol, vertlocs, a;
+        [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
 
-// var cate_info = get_catinfo(metdat);
-
-// var varcol, vertlocs, a;
-// [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
-
-// var stab, stabloc, ind;
-// [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
-// var stabconds = get_stabconds();
-
-// var colors = get_colors(stabconds.length, {basecolor: basecolor});
-// var nbins = 35;
-// var max_x = 0;
-
-// for (var cond = 0; cond < stabconds.length; cond++) {
-
-//     var hist_data = [];
-//     for (var ii = 0; ii < metdat[varcol].length; ii++) {
+        var hist_data = object2[varcol];
         
-//         // until there is a faster way to remove these                        
-//         if ((metdat[stab][ii] === stabconds[cond]) && (parseFloat(metdat[varcol][ii]) != -999.0) && (metdat[varcol][ii] != null)) {
-//             hist_data.push(metdat[varcol][ii]);
-//         }
-
-//     }
-//     var maxdat = hist_data.filter(Boolean);
-
-//     if (Math.max(...maxdat) > max_x) {
-//         max_x = Math.max(...maxdat);
-//     }    
-
-//     var min_hist = Math.min(...hist_data);
-//     var max_hist = Math.max(...hist_data);        
-
-//     var trace = {
-//         x: hist_data,
-//         type: "histogram",
-//         xbins: {
-//             start: min_hist,
-//             end: max_hist,
-//             size: (max_hist - min_hist)/(nbins)
-//         },
-//         histnorm: "probability",
-//         showlegend: cond === 0,
-//         visible: cond === 0,
-//         marker: {
-//             color: colors[cond],
-//             line: {
-//                 width: 2
-//             }
-//         },
-//         name: stabconds[cond]
-//     };
-
-//     graphish = graphish.concat(trace);
-// }
-
-// xstring = "$$" + cate_info["labels"][category] + "$$";
-// ystring = "$$ \\text{Frequency} [\\%] $$";
-// title_string = "$$ \\text{Frequency Histogram of_}" + xstring.replace("$$"," ");
-
-// var steps = [];
-// for (var j = 0; j < stabconds.length; j++){
-//     // This array decides when to display a certain trace
-//     var false_array = [];
-
-//     for(var i = 0; i < stabconds.length; i++) {
-//         if (i == j) {
-//             false_array.push(true);
-//         } else {
-//             false_array.push(false);
-//         }  
-//     }
-    
-//     steps.push({method: 'restyle', args: ['visible', false_array], 
-//                 label: stabconds[j]
-//                 });
-
-// }
-
-// var layout = {
-//     sliders: [{
-//         pad: {t: 30},
-//         len: ((stabconds.length)/12),
-//         steps: steps
-//     }],
-//     title: title_string,
-//     yaxis: {
-//         title: ystring,
-//         range: [0, 0.4]
-//     },
-//     xaxis: {
-//         title: xstring, 
-//         range: [0, 1.1*max_x]
-//     }
-// };
-
-// Plotly.newPlot("chart", graphish, layout)
-
-// ///////////////////////////////////////////////////////////////
-
-// // Stacked Histogram by Stability
-
-// // Set up data
-// var vertloc = 87;
-// var category = "speed";
-// var basecolor = "span";
-// var graphish = []; 
-// // var curvefit = "Weibull";
-// // var layout = {annotations: []};
-
-// // Convert CSV to JSON ... need to create dynamic labels in
-// // place of 7 and 10
-// var arrays = all_results[0].data;
-// var keys = arrays[7];
-// var values = arrays.slice(10);
-
-// var object1 = new Object();
-// // remove -1 in code with QC data
-// for (k = 0; k < (keys.length-1); k++) {
-//     var new_values = [];
-//     for (v = 0; v < values.length; v++) {
-//         new_values.push(values[v][k]);
-//     }
-//     if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//         object1[keys[k]] = new_values;
-//     } else {
-//         object1[keys[k]+"_adv"] = new_values;
-//     }
-// }       
-
-// var object2 = edit_met_data(object1);
-
-// var stab_conds, stab_cats, metdat;
-// [stab_conds, stab_cats, metdat] = flag_stability(object2);
-
-// var cate_info = get_catinfo(metdat);
-
-// var varcol, vertlocs, a;
-// [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
-
-// var stab, stabloc, ind;
-// [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
-// var stabconds = get_stabconds();
-
-// var colors = get_colors(stabconds.length, {basecolor: basecolor});
-// // var nbins = 35;
-// var max_mat = [];
-
-// for (var cond = 0; cond < stabconds.length; cond++) {
-
-//     var hist_data = [];
-//     for (var ii = 0; ii < metdat[varcol].length; ii++) {
+        var colors = get_colors(input_files.length, {basecolor: basecolor});
         
-//         // until there is a faster way to remove these                        
-//         if ((metdat[stab][ii] === stabconds[cond]) && (parseFloat(metdat[varcol][ii]) != -999.0) && (metdat[varcol][ii] != null)) {
-//             hist_data.push(metdat[varcol][ii]);
-//         }
 
-//     }
-//     // var maxdat = plotdat.filter(Boolean);
+        if (Math.max(...hist_data) > max_x) {
+            max_x = Math.max(...hist_data);
+        }
 
-//     // if (Math.max(...maxdat) > max_y) {
-//     //     max_mat[cond].push(Math.max(...maxdat));
-//     // }    
+        if (Math.min(...hist_data) < min_x) {
+            min_x = Math.min(...hist_data);
+        }
 
-//     // var min_hist = Math.min(...hist_data);
-//     // var max_hist = Math.max(...hist_data);        
+        if ((format === "dropdown") | (format === "slider")) {
 
-//     var trace = {
-//         x: hist_data,
-//         type: "histogram",
-//         // xbins: {
-//         //     start: min_hist,
-//         //     end: max_hist,
-//         //     size: (max_hist - min_hist)/(nbins)
-//         // },
-//         histnorm: "probability",
-//         marker: {
-//             color: colors[cond],
-//             line: {
-//                 width: 2
-//             }
-//         },
-//         name: stabconds[cond]
-//     };
+            var trace = {
+                x: hist_data,
+                type: "histogram",
+                xbins: {
+                    start: Math.min(...hist_data),
+                    end: Math.max(...hist_data),
+                    size: (Math.max(...hist_data) - Math.min(...hist_data))/(nbins)
+                },
+                histnorm: "probability",
+                marker: {
+                    color: colors[j],
+                    line: {
+                        width: 2
+                    }
+                },
+                name: input_files[j].split("_")[1].split(".")[0],
+                visible: j === 0
+            };
+            graphish = graphish.concat(trace);
 
-//     graphish = graphish.concat(trace);
-// }
+        }
 
-// xstring = "$$" + cate_info["labels"][category] + "$$";
-// ystring = "$$ \\text{Frequency} [\\%] $$";
-// title_string = "$$ \\text{Frequency Histogram of_}" + xstring.replace("$$"," ");
-
-// layout["title"] =  title_string;
-// layout["xaxis"] = {title: xstring};
-// layout["yaxis"] = {title: ystring};
-// //layout["hovermode"] = "closest";
-// layout["barmode"] = "stack";
-
-// console.log(graphish);
-
-// Plotly.newPlot("chart", graphish, layout)
-
-// ///////////////////////////////////////////////////////////////
-
-// // Monthly Stacked Histogram by Stability
-
-// // Set up data
-// var vertloc = 87;
-// var category = "speed";
-// var basecolor = "span";
-// var graphish = []; 
-// // var curvefit = "Weibull";
-// var layout = {annotations: []};
-// var format = "grid";
-// var max_x = 0;
-// var max_y = 2;
-
-// for(var j = 0; j < input_files.length; j++) {
-//     // Convert CSV to JSON ... need to create dynamic labels in
-//     // place of 7 and 10
-//     var arrays = all_results[j].data;
-//     var keys = arrays[7];
-//     var values = arrays.slice(10);
-
-//     var object1 = new Object();
-//     // remove -1 in code with QC data
-//     for (k = 0; k < (keys.length-1); k++) {
-//         var new_values = [];
-//         for (v = 0; v < values.length; v++) {
-//             new_values.push(values[v][k]);
-//         }
-//         if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//             object1[keys[k]] = new_values;
-//         } else {
-//             object1[keys[k]+"_adv"] = new_values;
-//         }
-//     }       
-
-//     var object2 = edit_met_data(object1);
-
-//     var stab_conds, stab_cats, metdat;
-//     [stab_conds, stab_cats, metdat] = flag_stability(object2);
-
-//     var cate_info = get_catinfo(metdat);
-
-//     var varcol, vertlocs, a;
-//     [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
-
-//     var stab, stabloc, ind;
-//     [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
-//     var stabconds = get_stabconds();
-
-//     var colors = get_colors(stabconds.length, {basecolor: basecolor});
-//     // var nbins = 35;
-
-//     for (var cond = 0; cond < stabconds.length; cond++) {
-
-//         var hist_data = [];
-//         for (var ii = 0; ii < metdat[varcol].length; ii++) {
+        if (format === "grid") {
             
-//             // until there is a faster way to remove these                        
-//             if ((metdat[stab][ii] === stabconds[cond]) && (parseFloat(metdat[varcol][ii]) != -999.0) && (metdat[varcol][ii] != null)) {
-//                 hist_data.push(metdat[varcol][ii]);
-//             }
+            var trace = {
+                x: hist_data,
+                xaxis: "x" + (j+2),
+                yaxis: "y" + (j+2),
+                type: "histogram",
+                xbins: {
+                    start: Math.min(...hist_data),
+                    end: Math.max(...hist_data),
+                    size: (Math.max(...hist_data) - Math.min(...hist_data))/(nbins)
+                },
+                histnorm: "probability",
+                marker: {
+                    color: colors[j],
+                    line: {
+                        width: 2
+                    }
+                },
+                name: input_files[j].split("_")[1].split(".")[0],
+            };
+            graphish = graphish.concat(trace);
 
-//         }
-//         var maxdat = hist_data.filter(Boolean);
+        }
 
-//         if (Math.max(...maxdat) > max_x) {
-//             max_x = Math.max(...maxdat);
-//         }    
+        if (format === "grid") {
 
-//         // var min_hist = Math.min(...hist_data);
-//         // var max_hist = Math.max(...hist_data);        
-    
-//         if ((format === "dropdown") | (format === "slider")) {
-//             var trace = {
-//                 x: hist_data,
-//                 type: "histogram",
-//                 // xbins: {
-//                 //     start: min_hist,
-//                 //     end: max_hist,
-//                 //     size: (max_hist - min_hist)/(nbins)
-//                 // },
-//                 histnorm: "probability",
-//                 visible: j === 0,
-//                 showlegend: j === 0,
-//                 marker: {
-//                     color: colors[cond],
-//                     line: {
-//                         width: 2
-//                     }
-//                 },
-//                 name: stabconds[cond],
-//             };
+            layout["yaxis" + (j+2)] = {
+                domain: calcDomain_y(Math.floor(j/cols),rows)
+            };
 
-//             graphish = graphish.concat(trace);
-//         }
+            layout["xaxis" + (j+2)] = {
+                domain: calcDomain_x(j%cols,cols)
+            };
 
-//         if (format === "grid") {
-//             var trace = {
-//                 x: hist_data,
-//                 xaxis: "x" + (j+2),
-//                 yaxis: "y" + (j+2),
-//                 type: "histogram",
-//                 showlegend: j === 0,
-//                 // xbins: {
-//                 //     start: min_hist,
-//                 //     end: max_hist,
-//                 //     size: (max_hist - min_hist)/(nbins)
-//                 // },
-//                 histnorm: "probability",
-//                 marker: {
-//                     color: colors[cond],
-//                     line: {
-//                         width: 2
-//                     }
-//                 },
-//                 name: stabconds[cond],
-//             };
+        }    
 
-//             graphish = graphish.concat(trace);
-//         }
-//     }
+    }
 
-//     if (format === "grid") {
+    var buttons = [];
+    var shapes = [];
 
-//         layout["yaxis" + (j+2)] = {
-//             domain: calcDomain_y(Math.floor(j/4),3)
-//         };
+    if ((format === "dropdown") | (format === "slider")) {
 
-//         layout["xaxis" + (j+2)] = {
-//             domain: calcDomain_x(j%4,4)
-//         };
+        for (var j = 0; j < input_files.length; j++){
+            // This array decides when to display a certain trace
+            false_array = [];
 
-//     }  
+            for(var i = 0; i < input_files.length; i++) {
+                if (i == j) {
+                    false_array.push(true);
+                } else {
+                    false_array.push(false);
+                }  
+            }
+            buttons.push({method: 'restyle', args: ['visible', false_array], 
+                        label: input_files[j].replace(/_|.csv/g," ")
+                        });
+        }
 
-// }
+    }
 
-// buttons = [];
-// shapes = [];
+    if (format === "slider") {
 
-// if ((format === "dropdown") | (format === "slider")) {
+        steps = buttons;
 
-//     for (var j = 0; j < input_files.length; j++){
-//         // This array decides when to display a certain trace
-//         false_array = [];
+    }
 
-//         for(var i = 0; i < input_files.length; i++) {
-//             if (i == j) {
-//                 for (var iah = 0; iah < stabconds.length; iah++) {
-//                     false_array.push(true);
-//                 }
-//             } else {
-//                 for (var iah = 0; iah < stabconds.length; iah++) {
-//                     false_array.push(false);
-//                 }
-//             }  
-//         }
-//         buttons.push({method: 'restyle', args: ['visible', false_array], 
-//                       label: input_files[j].replace(/_|.csv/g," ")
-//                     });
-//     }
+    var xstring = "$$" + cate_info["labels"][category] + "$$";
+    var ystring = "$$ \\text{Frequency} [\\%] $$";
+    var title_string = "$$ \\text{Frequency Histogram of }" + xstring.replace("$$"," ");
 
-// }
+    var diff = max_x - min_x;
 
-// if (format === "slider") {
-
-//     steps = buttons;
-
-// }
-
-// xstring = "$$" + cate_info["labels"][category] + "$$";
-// ystring = "$$ \\text{Frequency} [\\%] $$";
-// title_string = "$$ \\text{Frequency Histogram of_}" + xstring.replace("$$"," ");
-
-// if (format === "slider") {
-    
-//     var layout = {
-//         sliders: [{
-//             pad: {t: 30},
-//             len: ((input_files.length)/12),
-//             steps: steps
-//         }],
-//         //showlegend: false,
-//         barmode: "stack",
-//         title: title_string,
-//         yaxis: {
-//             title: ystring,
-//             range: [0, max_y]
-//         },
-//         xaxis: {
-//             title: xstring,
-//             range: [0, 1.1*max_x]
-//         }
-//     };
-
-// }
-
-// if (format === "grid") {
-
-//     layout["title"] = title_string;
-//     //layout["showlegend"] = false;
-//     layout["barmode"] = "stack";
-    
-//     for(var i = 0; i < input_files.length; i++) {
-//         layout["xaxis"+(i+2)]["range"] = [0, 1.1*max_x];
-//         layout["yaxis"+(i+2)]["range"] = [0, max_y];
-//         layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
-//                                 x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
-//                                 showarrow: true, arrowhead: 0, ax: 0, ay: 0});
-//     }
-//     layout.annotations.push({text: xstring, xref: "paper", yref: "paper",
-//                             x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
-//                             showarrow: false, font: {size: 12}});
-//     layout.annotations.push({text: ystring, xref: "paper", yref: "paper",
-//                             x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
-//                             showarrow: false, font: {size: 12}}); 
-
-// }
-
-// if (format === "dropdown") {
-
-//     var layout = {
-//         title: title_string,
-//         //showlegend: false,
-//         barmode: "stack",
-//         yaxis: {
-//             title: ystring,
-//             range: [0, max_y]
-//         },
-//         xaxis: {
-//             title: xstring, 
-//             range: [0, 1.1*max_x]
-//         },
-//         updatemenus: [{
-//             y: 1, 
-//             yanchor: "top", 
-//             buttons: buttons
-//         }]
-//     }
-
-// }
-
-// Plotly.newPlot("chart", graphish, layout)
-
-// ///////////////////////////////////////////////////////////////
-
-// // Normalized Histogram by Stability
-
-// // Set up data
-// var vertloc = 80;
-// var basecolor = "span";
-// var graphish = []; 
-
-// // Convert CSV to JSON ... need to create dynamic labels in
-// // place of 7 and 10
-// var arrays = all_results[0].data;
-// var keys = arrays[7];
-// var values = arrays.slice(10);
-
-// var object1 = new Object();
-// // remove -1 in code with QC data
-// for (k = 0; k < (keys.length-1); k++) {
-//     var new_values = [];
-//     for (v = 0; v < values.length; v++) {
-//         new_values.push(values[v][k]);
-//     }
-//     if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//         object1[keys[k]] = new_values;
-//     } else {
-//         object1[keys[k]+"_adv"] = new_values;
-//     }
-// }       
-
-// var object2 = edit_met_data(object1);
-
-// var stab_conds, stab_cats, metdat;
-// [stab_conds, stab_cats, metdat] = flag_stability(object2);
-
-// var cate_info = get_catinfo(metdat);
-
-// var stab, stabloc, ind;
-// [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
-// var stabconds = get_stabconds();
-
-// var colors = get_colors(stabconds.length, {basecolor: basecolor});
-
-// var all_dat = [[],[],[],[],[]];
-// for (var cond = 0; cond < stabconds.length; cond++) {
-
-//     var plotdat = [];
-//     for (var hour = 0; hour < 24; hour++) {
-
-//         var array_temp = [];
-//         var array_temp = metdat[stab];
-//         var cond_array = [];
+    if (format === "slider") {
         
-//         for (var i = 0; i < array_temp.length; i += 1) {
-//             // until there is a faster way to remove these                      
-//             if ((parseInt(metdat["Date"][i].split(" ")[1].split(":")[0]) === hour) && (parseFloat(array_temp[i]) != -999.0) && (array_temp[i] != null) && (array_temp[i] === stabconds[cond])) {
-//                 cond_array.push(array_temp[i]);
-//             }
-//         }
+        var layout = {
+            sliders: [{
+                pad: {t: 30},
+                len: ((input_files.length)/12),
+                steps: steps
+            }],
+            showlegend: false,
+            title: title_string,
+            yaxis: {
+                title: ystring,
+                range: [0, max_y]
+            },
+            xaxis: {
+                title: xstring,
+                range: [min_x-margin*diff, max_x+margin*diff]
+            }
+        };
 
-//         plotdat.push(cond_array.length/array_temp.length);
-//     }
+    }
 
-//     all_dat[cond].push(plotdat);
+    if (format === "grid") {
 
-//     var trace = {
-//         x: range(0,24,1),
-//         y: plotdat,
-//         type: "bar",
-//         marker: {
-//             color: colors[cond],
-//         },
-//         name: stabconds[cond]
-//     };
+        layout["title"] = title_string;
+        layout["showlegend"] = false;
+        
+        for(var i = 0; i < input_files.length; i++) {
+            layout["xaxis"+(i+2)]["range"] = [min_x-margin*diff, max_x+margin*diff];
+            layout["yaxis"+(i+2)]["range"] = [0, max_y];
+            layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
+                                    x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
+                                    showarrow: true, arrowhead: 0, ax: 0, ay: 0});
+        }
+        layout.annotations.push({text: xstring, xref: "paper", yref: "paper",
+                                x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
+                                showarrow: false, font: {size: 12}});
+        layout.annotations.push({text: ystring, xref: "paper", yref: "paper",
+                                x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
+                                showarrow: false, font: {size: 12}}); 
 
-//     graphish = graphish.concat(trace);
+    }
 
-// }
+    if (format === "dropdown") {
 
-// for (var hour = 0; hour < graphish[0]["y"].length; hour++) {
+        var layout = {
+            title: title_string,
+            showlegend: false,
+            yaxis: {
+                title: ystring,
+                range: [0, max_y]
+            },
+            xaxis: {
+                title: xstring, 
+                range: [min_x-margin*diff, max_x+margin*diff]
+            },
+            updatemenus: [{
+                y: 1, 
+                yanchor: "top", 
+                buttons: buttons
+            }]
+        }
 
-//     var total = 0;
-//     for (var cond = 0; cond < graphish.length; cond++) {
-//         total += graphish[cond]["y"][hour];
-//     }
-//     for (var cond = 0; cond < graphish.length; cond++) {
-//         graphish[cond]["y"][hour] = graphish[cond]["y"][hour]*100/total;
-//     }
-// }
+    }
 
-// var xstring = "$$ \\text{Time of Day [Hour]} $$";
-// var ystring = "$$ \\text{Probability of Stability} [\\%] $$";
-// var title_string = "$$ \\text{Time of Day vs. Probability of Stability} $$";
+    return [graphish, layout];
 
-// var layout = {
-//     "title": title_string,
-//     "xaxis": {
-//         title: xstring
-//     },
-//     "yaxis": {
-//         title: ystring
-//     },
-//     "barmode": "stack"
-// };
-
-// Plotly.newPlot("chart", graphish, layout)
+}
 
 // ///////////////////////////////////////////////////////////////
 
-// // Normalized Monthly Histogram by Stability
+// Histogram by Stability
 
-// // Set up data
-// var vertloc = 80;
-// var basecolor = "span";
-// var graphish_fin = []; 
-// var format = "dropdown";
-// var layout = {annotations: []};
+function hist_by_stab(all_results, input_files, category, vertloc, basecolor, nbins) {
+    
+    // Set up data
+    var graphish = []; 
+    var max_x = -Infinity;
+    var min_x = Infinity;   
+    var margin = 0.25; 
 
-// for (var j = 0; j < input_files.length; j++) {
-//     var graphish = [];
-//     // Convert CSV to JSON ... need to create dynamic labels in
-//     // place of 7 and 10
-//     var arrays = all_results[j].data;
-//     var keys = arrays[7];
-//     var values = arrays.slice(10);
+    var object1 = process_data(all_results, 0); 
+    var object2 = edit_met_data(object1);
 
-//     var object1 = new Object();
-//     // remove -1 in code with QC data
-//     for (k = 0; k < (keys.length-1); k++) {
-//         var new_values = [];
-//         for (v = 0; v < values.length; v++) {
-//             new_values.push(values[v][k]);
-//         }
-//         if (Object.keys(object1).indexOf(keys[k]) == -1) {
-//             object1[keys[k]] = new_values;
-//         } else {
-//             object1[keys[k]+"_adv"] = new_values;
-//         }
-//     }       
+    var stab_conds, stab_cats, metdat;
+    [stab_conds, stab_cats, metdat] = flag_stability(object2);
 
-//     var object2 = edit_met_data(object1);
+    var cate_info = get_catinfo(metdat);
 
-//     var stab_conds, stab_cats, metdat;
-//     [stab_conds, stab_cats, metdat] = flag_stability(object2);
+    var varcol, vertlocs, a;
+    [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
 
-//     var cate_info = get_catinfo(metdat);
+    var stab, stabloc, ind;
+    [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
+    var stabconds = get_stabconds();
 
-//     var stab, stabloc, ind;
-//     [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
-//     var stabconds = get_stabconds();
+    var colors = get_colors(stabconds.length, {basecolor: basecolor});
 
-//     var colors = get_colors(stabconds.length, {basecolor: basecolor});
 
-//     var all_dat = [[],[],[],[],[]];
-//     for (var cond = 0; cond < stabconds.length; cond++) {
+    for (var cond = 0; cond < stabconds.length; cond++) {
 
-//         var plotdat = [];
-//         for (var hour = 0; hour < 24; hour++) {
-
-//             var array_temp = [];
-//             var array_temp = metdat[stab];
-//             var cond_array = [];
+        var hist_data = [];
+        for (var ii = 0; ii < metdat[varcol].length; ii++) {
             
-//             for (var i = 0; i < array_temp.length; i += 1) {
-//                 // until there is a faster way to remove these                      
-//                 if ((parseInt(metdat["Date"][i].split(" ")[1].split(":")[0]) === hour) && (parseFloat(array_temp[i]) != -999.0) && (array_temp[i] != null) && (array_temp[i] === stabconds[cond])) {
-//                     cond_array.push(array_temp[i]);
-//                 }
-//             }
+            // until there is a faster way to remove these                        
+            if ((metdat[stab][ii] === stabconds[cond]) && (parseFloat(metdat[varcol][ii]) != -999.0) && (metdat[varcol][ii] != null)) {
+                hist_data.push(metdat[varcol][ii]);
+            }
 
-//             plotdat.push(cond_array.length/array_temp.length);
-//         }
+        }
+        var maxdat = hist_data.filter(Boolean);
 
-//         all_dat[cond].push(plotdat);
+        if (Math.max(...maxdat) > max_x) {
+            max_x = Math.max(...maxdat);
+        }    
 
-//         if ((format === "dropdown") | (format === "slider")) {
+        if (Math.min(...maxdat) < min_x) {
+            min_x = Math.min(...maxdat);
+        }  
 
-//             var trace = {
-//                 x: range(0,24,1),
-//                 y: plotdat,
-//                 type: "bar",
-//                 visible: j === 0,
-//                 marker: {
-//                     color: colors[cond],
-//                 },
-//                 name: stabconds[cond]
-//             };
+        var min_hist = Math.min(...hist_data);
+        var max_hist = Math.max(...hist_data);        
 
-//             graphish = graphish.concat(trace);
+        var trace = {
+            x: hist_data,
+            type: "histogram",
+            xbins: {
+                start: min_hist,
+                end: max_hist,
+                size: (max_hist - min_hist)/(nbins)
+            },
+            histnorm: "probability",
+            showlegend: cond === 0,
+            visible: cond === 0,
+            marker: {
+                color: colors[cond],
+                line: {
+                    width: 2
+                }
+            },
+            name: stabconds[cond]
+        };
 
-//         }
+        graphish = graphish.concat(trace);
+    }
 
-//         if (format === "grid") {
+    var xstring = "$$" + cate_info["labels"][category] + "$$";
+    var ystring = "$$ \\text{Frequency} [\\%] $$";
+    var title_string = "$$ \\text{Frequency Histogram of }" + xstring.replace("$$"," ");
 
-//             var trace = {
-//                 x: range(0,24,1),
-//                 y: plotdat,
-//                 xaxis: "x" + (j+2),
-//                 yaxis: "y" + (j+2),
-//                 type: "bar",
-//                 showlegend: j === 0,
-//                 marker: {
-//                     color: colors[cond],
-//                 },
-//                 name: stabconds[cond]
-//             };
+    var diff = max_x - min_x;
 
-//             graphish = graphish.concat(trace);
+    var steps = [];
+    for (var j = 0; j < stabconds.length; j++){
+        // This array decides when to display a certain trace
+        var false_array = [];
 
-//         }
-//     }
+        for(var i = 0; i < stabconds.length; i++) {
+            if (i == j) {
+                false_array.push(true);
+            } else {
+                false_array.push(false);
+            }  
+        }
+        
+        steps.push({method: 'restyle', args: ['visible', false_array], 
+                    label: stabconds[j]
+                    });
 
-//     if (format === "grid") {
+    }
 
-//         layout["yaxis" + (j+2)] = {
-//             domain: calcDomain_y(Math.floor(j/4),3)
-//         };
+    var layout = {
+        sliders: [{
+            pad: {t: 30},
+            len: ((stabconds.length)/12),
+            steps: steps
+        }],
+        title: title_string,
+        yaxis: {
+            title: ystring,
+            range: [0, 0.4]
+        },
+        xaxis: {
+            title: xstring, 
+            range: [min_x-margin*diff, max_x+margin*diff]
+        }
+    };
 
-//         layout["xaxis" + (j+2)] = {
-//             domain: calcDomain_x(j%4,4)
-//         };
+    return [graphish, layout];
 
-//     }  
+}
 
-//     for (var hour = 0; hour < graphish[0]["y"].length; hour++) {
+// ///////////////////////////////////////////////////////////////
 
-//         var total = 0;
-//         for (var cond = 0; cond < graphish.length; cond++) {
-//             total += graphish[cond]["y"][hour];
-//         }
-//         for (var cond = 0; cond < graphish.length; cond++) {
-//             graphish[cond]["y"][hour] = graphish[cond]["y"][hour]*100/total;
-//         }
-//     }
+// Stacked Histogram by Stability
 
-//     graphish_fin = graphish_fin.concat(graphish);
+function stacked_hist_by_stab(all_results, input_files, category, vertloc, basecolor) {
 
-// }
+    // Set up data
+    var graphish = []; 
+    var layout = {};
+    var margin = 0.25;
 
-// buttons = [];
-// shapes = [];
+    var object1 = process_data(all_results, 0); 
+    var object2 = edit_met_data(object1);
 
-// if ((format === "dropdown") | (format === "slider")) {
+    var stab_conds, stab_cats, metdat;
+    [stab_conds, stab_cats, metdat] = flag_stability(object2);
 
-//     for (var j = 0; j < input_files.length; j++){
-//         // This array decides when to display a certain trace
-//         false_array = [];
+    var cate_info = get_catinfo(metdat);
 
-//         for(var i = 0; i < input_files.length; i++) {
-//             if (i == j) {
-//                 for (var iah = 0; iah < stabconds.length; iah++) {
-//                     false_array.push(true);
-//                 }
-//             } else {
-//                 for (var iah = 0; iah < stabconds.length; iah++) {
-//                     false_array.push(false);
-//                 }
-//             }  
-//         }
-//         buttons.push({method: 'restyle', args: ['visible', false_array], 
-//                       label: input_files[j].replace(/_|.csv/g," ")
-//                     });
-//     }
+    var varcol, vertlocs, a;
+    [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
 
-// }
+    var stab, stabloc, ind;
+    [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
+    var stabconds = get_stabconds();
 
-// if (format === "slider") {
+    var colors = get_colors(stabconds.length, {basecolor: basecolor});
+    var max_mat = [];
 
-//     steps = buttons;
+    for (var cond = 0; cond < stabconds.length; cond++) {
 
-// }
+        var hist_data = [];
+        for (var ii = 0; ii < metdat[varcol].length; ii++) {
+            
+            // until there is a faster way to remove these                        
+            if ((metdat[stab][ii] === stabconds[cond]) && (parseFloat(metdat[varcol][ii]) != -999.0) && (metdat[varcol][ii] != null)) {
+                hist_data.push(metdat[varcol][ii]);
+            }
 
-// var xstring = "$$ \\text{Time of Day [Hour]} $$";
-// var ystring = "$$ \\text{Probability of Stability} [\\%] $$";
-// var title_string = "$$ \\text{Time of Day [Hour] vs. Probability of Stability} [\\%] $$";
+        }     
 
-// if (format === "slider") {
+        var trace = {
+            x: hist_data,
+            type: "histogram",
+            histnorm: "probability",
+            marker: {
+                color: colors[cond],
+                line: {
+                    width: 2
+                }
+            },
+            name: stabconds[cond]
+        };
+
+        graphish = graphish.concat(trace);
+    }
+
+    var xstring = "$$" + cate_info["labels"][category] + "$$";
+    var ystring = "$$ \\text{Frequency} [\\%] $$";
+    var title_string = "$$ \\text{Frequency Histogram of }" + xstring.replace("$$"," ");
+
+    layout["title"] =  title_string;
+    layout["xaxis"] = {title: xstring};
+    layout["yaxis"] = {title: ystring};
+    //layout["hovermode"] = "closest";
+    layout["barmode"] = "stack";
+
+    return [graphish, layout];
+
+}
+
+// ///////////////////////////////////////////////////////////////
+
+// Monthly Stacked Histogram by Stability
+
+function monthly_stacked_hist_by_stab(all_results, input_files, category, vertloc, basecolor, format, rows, cols) {
+
+    // Set up data
+    var graphish = []; 
+    var layout = {annotations: []};
+    var max_x = -Infinity;
+    var min_x = Infinity;
+    var max_y = 2;
+    var margin = 0.25;
+
+    for(var j = 0; j < input_files.length; j++) {
+
+        var object1 = process_data(all_results, j);    
+        var object2 = edit_met_data(object1);
+
+        var stab_conds, stab_cats, metdat;
+        [stab_conds, stab_cats, metdat] = flag_stability(object2);
+
+        var cate_info = get_catinfo(metdat);
+
+        var varcol, vertlocs, a;
+        [varcol, vertlocs, a] = get_vertical_locations(cate_info["columns"][category], {location: vertloc});
+
+        var stab, stabloc, ind;
+        [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
+        var stabconds = get_stabconds();
+
+        var colors = get_colors(stabconds.length, {basecolor: basecolor});
+
+        for (var cond = 0; cond < stabconds.length; cond++) {
+
+            var hist_data = [];
+            for (var ii = 0; ii < metdat[varcol].length; ii++) {
+                
+                // until there is a faster way to remove these                        
+                if ((metdat[stab][ii] === stabconds[cond]) && (parseFloat(metdat[varcol][ii]) != -999.0) && (metdat[varcol][ii] != null)) {
+                    hist_data.push(metdat[varcol][ii]);
+                }
+
+            }
+            var maxdat = hist_data.filter(Boolean);
+
+            if (Math.max(...maxdat) > max_x) {
+                max_x = Math.max(...maxdat);
+            }    
+
+            if (Math.min(...maxdat) < min_x) {
+                min_x = Math.min(...maxdat);
+            }    
+
+            // var min_hist = Math.min(...hist_data);
+            // var max_hist = Math.max(...hist_data);        
+        
+            if ((format === "dropdown") | (format === "slider")) {
+                var trace = {
+                    x: hist_data,
+                    type: "histogram",
+                    // xbins: {
+                    //     start: min_hist,
+                    //     end: max_hist,
+                    //     size: (max_hist - min_hist)/(nbins)
+                    // },
+                    histnorm: "probability",
+                    visible: j === 0,
+                    showlegend: j === 0,
+                    marker: {
+                        color: colors[cond],
+                        line: {
+                            width: 2
+                        }
+                    },
+                    name: stabconds[cond],
+                };
+
+                graphish = graphish.concat(trace);
+            }
+
+            if (format === "grid") {
+                var trace = {
+                    x: hist_data,
+                    xaxis: "x" + (j+2),
+                    yaxis: "y" + (j+2),
+                    type: "histogram",
+                    showlegend: j === 0,
+                    // xbins: {
+                    //     start: min_hist,
+                    //     end: max_hist,
+                    //     size: (max_hist - min_hist)/(nbins)
+                    // },
+                    histnorm: "probability",
+                    marker: {
+                        color: colors[cond],
+                        line: {
+                            width: 2
+                        }
+                    },
+                    name: stabconds[cond],
+                };
+
+                graphish = graphish.concat(trace);
+            }
+        }
+
+        if (format === "grid") {
+
+            layout["yaxis" + (j+2)] = {
+                domain: calcDomain_y(Math.floor(j/cols),rows)
+            };
+
+            layout["xaxis" + (j+2)] = {
+                domain: calcDomain_x(j%cols,cols)
+            };
+
+        }
+
+    }
+
+    buttons = [];
+    shapes = [];
+
+    if ((format === "dropdown") | (format === "slider")) {
+
+        for (var j = 0; j < input_files.length; j++){
+            // This array decides when to display a certain trace
+            false_array = [];
+
+            for(var i = 0; i < input_files.length; i++) {
+                if (i == j) {
+                    for (var iah = 0; iah < stabconds.length; iah++) {
+                        false_array.push(true);
+                    }
+                } else {
+                    for (var iah = 0; iah < stabconds.length; iah++) {
+                        false_array.push(false);
+                    }
+                }  
+            }
+            buttons.push({method: 'restyle', args: ['visible', false_array], 
+                        label: input_files[j].replace(/_|.csv/g," ")
+                        });
+        }
+
+    }
+
+    if (format === "slider") {
+
+        steps = buttons;
+
+    }
+
+    var xstring = "$$" + cate_info["labels"][category] + "$$";
+    var ystring = "$$ \\text{Frequency} [\\%] $$";
+    var title_string = "$$ \\text{Frequency Histogram of }" + xstring.replace("$$"," ");
+
+    var diff = max_x - min_x;
+
+    if (format === "slider") {
+        
+        var layout = {
+            sliders: [{
+                pad: {t: 30},
+                len: ((input_files.length)/12),
+                steps: steps
+            }],
+            //showlegend: false,
+            barmode: "stack",
+            title: title_string,
+            yaxis: {
+                title: ystring,
+                range: [0, max_y]
+            },
+            xaxis: {
+                title: xstring,
+                range: [min_x-margin*diff, max_x+margin*diff]
+            }
+        };
+
+    }
+
+    if (format === "grid") {
+
+        layout["title"] = title_string;
+        //layout["showlegend"] = false;
+        layout["barmode"] = "stack";
+        
+        for(var i = 0; i < input_files.length; i++) {
+            layout["xaxis"+(i+2)]["range"] = [min_x-margin*diff, max_x+margin*diff];
+            layout["yaxis"+(i+2)]["range"] = [0, max_y];
+            layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
+                                    x: layout["xaxis"+(i+2)].domain[1]-0.02, y: layout["yaxis"+(i+2)].domain[1]-0.05,
+                                    showarrow: true, arrowhead: 0, ax: 0, ay: 0});
+        }
+        layout.annotations.push({text: xstring, xref: "paper", yref: "paper",
+                                x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
+                                showarrow: false, font: {size: 12}});
+        layout.annotations.push({text: ystring, xref: "paper", yref: "paper",
+                                x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
+                                showarrow: false, font: {size: 12}}); 
+
+    }
+
+    if (format === "dropdown") {
+
+        var layout = {
+            title: title_string,
+            //showlegend: false,
+            barmode: "stack",
+            yaxis: {
+                title: ystring,
+                range: [0, max_y]
+            },
+            xaxis: {
+                title: xstring, 
+                range: [min_x-margin*diff, max_x+margin*diff]
+            },
+            updatemenus: [{
+                y: 1, 
+                yanchor: "top", 
+                buttons: buttons
+            }]
+        }
+
+    }
+
+    return [graphish, layout];
+
+}
+
+// ///////////////////////////////////////////////////////////////
+
+// Normalized Histogram by Stability
+
+function norm_hist_by_stab(all_results, input_files, vertloc, basecolor) {
+
+    // Set up data
+    var graphish = []; 
+    var margin = 0.25;
+
+    var object1 = process_data(all_results, 0);   
+    var object2 = edit_met_data(object1);
+
+    var stab_conds, stab_cats, metdat;
+    [stab_conds, stab_cats, metdat] = flag_stability(object2);
+
+    var cate_info = get_catinfo(metdat);
+    console.log(cate_info);
+
+    var stab, stabloc, ind;
+    [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
+    var stabconds = get_stabconds();
+
+    var colors = get_colors(stabconds.length, {basecolor: basecolor});
+
+    var all_dat = [[],[],[],[],[]];
+    for (var cond = 0; cond < stabconds.length; cond++) {
+
+        var plotdat = [];
+        for (var hour = 0; hour < 24; hour++) {
+
+            var array_temp = [];
+            var array_temp = metdat[stab];
+            var cond_array = [];
+            
+            for (var i = 0; i < array_temp.length; i += 1) {
+                // until there is a faster way to remove these                      
+                if ((parseInt(metdat["Date"][i].split(" ")[1].split(":")[0]) === hour) && (parseFloat(array_temp[i]) != -999.0) && (array_temp[i] != null) && (array_temp[i] === stabconds[cond])) {
+                    cond_array.push(array_temp[i]);
+                }
+            }
+
+            plotdat.push(cond_array.length/array_temp.length);
+        }
+
+        all_dat[cond].push(plotdat);
+
+        var trace = {
+            x: range(0,24,1),
+            y: plotdat,
+            type: "bar",
+            marker: {
+                color: colors[cond],
+            },
+            name: stabconds[cond]
+        };
+
+        graphish = graphish.concat(trace);
+
+    }
+
+    for (var hour = 0; hour < graphish[0]["y"].length; hour++) {
+
+        var total = 0;
+        for (var cond = 0; cond < graphish.length; cond++) {
+            total += graphish[cond]["y"][hour];
+        }
+        for (var cond = 0; cond < graphish.length; cond++) {
+            graphish[cond]["y"][hour] = graphish[cond]["y"][hour]*100/total;
+        }
+
+    }
+
+    var xstring = "$$ \\text{Time of Day [Hour]} $$";
+    var ystring = "$$ \\text{Probability of Stability} [\\%] $$";
+    var title_string = "$$ \\text{Time of Day vs. Probability of Stability} $$";
+
+    var layout = {
+        "title": title_string,
+        "xaxis": {
+            title: xstring
+        },
+        "yaxis": {
+            title: ystring
+        },
+        "barmode": "stack"
+    };
+
+    return [graphish, layout];
+
+}
+
+// ///////////////////////////////////////////////////////////////
+
+// Normalized Monthly Histogram by Stability
+
+function monthly_norm_hist_by_stab(all_results, input_files, vertloc, basecolor, format, rows, cols) {
+
+    // Set up data
+    var graphish_fin = []; 
+    var layout = {annotations: []};
+    var margin = 0.25;
+
+    for (var j = 0; j < input_files.length; j++) {
+        var graphish = [];
+
+        var object1 = process_data(all_results, j);   
+        var object2 = edit_met_data(object1);
     
-//     var layout = {
-//         sliders: [{
-//             pad: {t: 30},
-//             len: ((input_files.length)/12),
-//             steps: steps
-//         }],
-//         barmode: "stack",
-//         title: title_string,
-//         yaxis: {
-//             title: ystring,
-//             range: [0, 100]
-//         },
-//         xaxis: {
-//             title: xstring,
-//             range: [-0.5, 23.5]
-//         }
-//     };
-
-// }
-
-// if (format === "grid") {
-
-//     layout["title"] = title_string;
-//     //layout["showlegend"] = false;
-//     layout["barmode"] = "stack";
+        var stab_conds, stab_cats, metdat;
+        [stab_conds, stab_cats, metdat] = flag_stability(object2);
+        var cate_info = get_catinfo(metdat);
     
-//     for(var i = 0; i < input_files.length; i++) {
-//         layout["xaxis"+(i+2)]["range"] = [-0.5, 23.5];
-//         layout["yaxis"+(i+2)]["range"] = [0, 100];
-//         layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
-//                                 x: layout["xaxis"+(i+2)].domain[1], y: layout["yaxis"+(i+2)].domain[1]-0.14, textangle: 90,
-//                                 showarrow: true, arrowhead: 0, ax: 0, ay: 0});
-//     }
-//     layout.annotations.push({text: xstring, xref: "paper", yref: "paper",
-//                             x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
-//                             showarrow: false, font: {size: 12}});
-//     layout.annotations.push({text: ystring, xref: "paper", yref: "paper",
-//                             x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
-//                             showarrow: false, font: {size: 12}}); 
+        var stab, stabloc, ind;
+        [stab, stabloc, ind] = get_vertical_locations(cate_info["columns"]["stability flag"], {location: vertloc});
+        var stabconds = get_stabconds();
 
-// }
+        var colors = get_colors(stabconds.length, {basecolor: basecolor});
+    
+        var all_dat = [[],[],[],[],[]];
+        for (var cond = 0; cond < stabconds.length; cond++) {
+    
+            var plotdat = [];
+            for (var hour = 0; hour < 24; hour++) {
+    
+                var array_temp = [];
+                var array_temp = metdat[stab];
+                var cond_array = [];
+                
+                for (var i = 0; i < array_temp.length; i += 1) {
+                    // until there is a faster way to remove these                      
+                    if ((parseInt(metdat["Date"][i].split(" ")[1].split(":")[0]) === hour) && (parseFloat(array_temp[i]) != -999.0) && (array_temp[i] != null) && (array_temp[i] === stabconds[cond])) {
+                        cond_array.push(array_temp[i]);
+                    }
+                }
 
-// if (format === "dropdown") {
+                plotdat.push(cond_array.length/array_temp.length);
+            }
 
-//     var layout = {
-//         title: title_string,
-//         barmode: "stack",
-//         yaxis: {
-//             title: ystring,
-//             range: [0, 100]
-//         },
-//         xaxis: {
-//             title: xstring, 
-//             range: [-0.5, 23.5]
-//         },
-//         updatemenus: [{
-//             y: 1, 
-//             yanchor: "top", 
-//             buttons: buttons
-//         }]
-//     }
+            all_dat[cond].push(plotdat);
 
-// }
+            if ((format === "dropdown") | (format === "slider")) {
 
-// Plotly.newPlot("chart", graphish_fin, layout)
+                var trace = {
+                    x: range(0,24,1),
+                    y: plotdat,
+                    type: "bar",
+                    visible: j === 0,
+                    marker: {
+                        color: colors[cond],
+                    },
+                    name: stabconds[cond]
+                };
+
+                graphish = graphish.concat(trace);
+
+            }
+
+            if (format === "grid") {
+
+                var trace = {
+                    x: range(0,24,1),
+                    y: plotdat,
+                    xaxis: "x" + (j+2),
+                    yaxis: "y" + (j+2),
+                    type: "bar",
+                    showlegend: j === 0,
+                    marker: {
+                        color: colors[cond],
+                    },
+                    name: stabconds[cond]
+                };
+
+                graphish = graphish.concat(trace);
+
+            }
+        }
+
+        if (format === "grid") {
+
+            layout["yaxis" + (j+2)] = {
+                domain: calcDomain_y(Math.floor(j/cols),rows)
+            };
+
+            layout["xaxis" + (j+2)] = {
+                domain: calcDomain_x(j%cols,cols)
+            };
+
+        }
+
+        for (var hour = 0; hour < graphish[0]["y"].length; hour++) {
+
+            var total = 0;
+            for (var cond = 0; cond < graphish.length; cond++) {
+                total += graphish[cond]["y"][hour];
+            }
+            for (var cond = 0; cond < graphish.length; cond++) {
+                graphish[cond]["y"][hour] = graphish[cond]["y"][hour]*100/total;
+            }
+        }
+
+        graphish_fin = graphish_fin.concat(graphish);
+
+    }
+
+    var buttons = [];
+    var shapes = [];
+
+    if ((format === "dropdown") | (format === "slider")) {
+
+        for (var j = 0; j < input_files.length; j++){
+            // This array decides when to display a certain trace
+            false_array = [];
+
+            for(var i = 0; i < input_files.length; i++) {
+                if (i == j) {
+                    for (var iah = 0; iah < stabconds.length; iah++) {
+                        false_array.push(true);
+                    }
+                } else {
+                    for (var iah = 0; iah < stabconds.length; iah++) {
+                        false_array.push(false);
+                    }
+                }  
+            }
+            buttons.push({method: 'restyle', args: ['visible', false_array], 
+                        label: input_files[j].replace(/_|.csv/g," ")
+                        });
+        }
+
+    }
+
+    if (format === "slider") {
+
+        steps = buttons;
+
+    }
+
+    var xstring = "$$ \\text{Time of Day [Hour]} $$";
+    var ystring = "$$ \\text{Probability of Stability} [\\%] $$";
+    var title_string = "$$ \\text{Time of Day [Hour] vs. Probability of Stability} [\\%] $$";
+
+    if (format === "slider") {
+        
+        var layout = {
+            sliders: [{
+                pad: {t: 30},
+                len: ((input_files.length)/12),
+                steps: steps
+            }],
+            barmode: "stack",
+            title: title_string,
+            yaxis: {
+                title: ystring,
+                range: [0, 100]
+            },
+            xaxis: {
+                title: xstring,
+                range: [-0.5, 23.5]
+            }
+        };
+
+    }
+
+    if (format === "grid") {
+
+        layout["title"] = title_string;
+        //layout["showlegend"] = false;
+        layout["barmode"] = "stack";
+        
+        for(var i = 0; i < input_files.length; i++) {
+            layout["xaxis"+(i+2)]["range"] = [-0.5, 23.5];
+            layout["yaxis"+(i+2)]["range"] = [0, 100];
+            layout.annotations.push({text: input_files[i].split("_")[1].split(".")[0], xref: "paper", yref: "paper", 
+                                    x: layout["xaxis"+(i+2)].domain[1]+0.005, y: layout["yaxis"+(i+2)].domain[1]-0.14, textangle: 90,
+                                    showarrow: true, arrowhead: 0, ax: 0, ay: 0});
+        }
+        layout.annotations.push({text: xstring, xref: "paper", yref: "paper",
+                                x: 0.5, y: 1, xanchor: "center", yanchor: "bottom",
+                                showarrow: false, font: {size: 12}});
+        layout.annotations.push({text: ystring, xref: "paper", yref: "paper",
+                                x: 1, y: 0.5, xanchor: "left", yanchor: "middle", textangle: 90,
+                                showarrow: false, font: {size: 12}}); 
+
+    }
+
+    if (format === "dropdown") {
+
+        var layout = {
+            title: title_string,
+            barmode: "stack",
+            yaxis: {
+                title: ystring,
+                range: [0, 100]
+            },
+            xaxis: {
+                title: xstring, 
+                range: [-0.5, 23.5]
+            },
+            updatemenus: [{
+                y: 1, 
+                yanchor: "top", 
+                buttons: buttons
+            }]
+        }
+
+    }
+
+    return [graphish_fin, layout];
+
+}
 
 // ///////////////////////////////////////////////////////////////

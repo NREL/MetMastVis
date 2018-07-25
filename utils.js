@@ -280,6 +280,7 @@ function linear_gradient(start_hex, finish_hex="#FFFFFF", n=10) {
 }
 
 function polylinear_gradient(colors, n) {
+
     // The number of colors per individual linear gradient
     var n_out = parseInt(parseFloat(n) / (colors.length - 1));
 
@@ -303,16 +304,19 @@ function polylinear_gradient(colors, n) {
 
 }
 
-function get_colors(ncolors, {basecolor="cycle", reverse=false} = {}) {
+function get_colors(ncolors, {basecolor, reverse = false} = {}) {
 
     // NREL official colors
     var nrelcolors = get_nrelcolors();
 
     if (typeof basecolor === "object") {
+
         colors = basecolor;
         cdict = polylinear_gradient(colors, ncolors+2);
         colors = cdict["hex"];
+
     } else if (basecolor in nrelcolors) {
+
         var nc = ncolors + 2;
         var colors = [];
         while (colors.length < ncolors) {
@@ -322,7 +326,9 @@ function get_colors(ncolors, {basecolor="cycle", reverse=false} = {}) {
             colors = cdict["hex"];
             colors.splice(2,1);
         }
+
     } else if (basecolor == "cycle") {
+
         var nc = ncolors + 2;
         var colors = [];
         while (colors.length < ncolors) {
@@ -332,14 +338,19 @@ function get_colors(ncolors, {basecolor="cycle", reverse=false} = {}) {
             colors = cdict["hex"];
             colors.splice(2,1);
         }
+
     } else if (basecolor == "span") {
+
         colors = [nrelcolors["blue"][0], "#D1D5D8", nrelcolors["red"][0]];
         cdict = polylinear_gradient(colors, ncolors+2);
         colors = cdict["hex"];
+
     }
 
     if (reverse == true) {
+
         colors.reverse();
+
     }
 
     return colors;

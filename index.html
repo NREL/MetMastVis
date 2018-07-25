@@ -4,6 +4,12 @@
 #cat_select {
 	display: none;
 }
+#abscissa_select {
+	display: none;
+}
+#group-by_select {
+	display: none;
+}
 #vertloc_select {
 	display: none;
 }
@@ -37,6 +43,21 @@
 #col_select {
 	display: none;
 }
+#fit_select {
+	display: none;
+}
+#bin_select {
+	display: none;
+}
+#sector_select {
+	display: none;
+}
+#bin-arrange_select {
+	display: none;
+}
+#color_select {
+	display: none;
+}
 #start {
 	display: none;
 }
@@ -64,7 +85,7 @@
 		<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js"></script>
 	</head>
   	<body>
-		<h1 align = "center">MetMast Web Portal</h1>  
+		<h1 align = "center"> MetMast Web Portal </h1>  
 		<div id = "latex"></div>
     	<div class = "container">
 
@@ -78,7 +99,15 @@
 						<option value = "0"> Category </option>
 				</select>
 
-				<input type = "number" id = "vertloc_select" value = "0">
+				<select name = "abscissa_select" id = "abscissa_select" onmousedown = "element_select()">
+						<option value = "0"> Abscissa </option>
+				</select>
+
+				<select name = "group-by_select" id = "group-by_select" onmousedown = "element_select()">
+						<option value = "0"> Group-By </option>
+				</select>
+
+				<input type = "number" id = "vertloc_select" value = "" placeholder = "Vertical Location">
 
 				<select name = "range_length_select" id = "range_length_select" onmousedown = "element_select()">
 						<option value = "0"> One Month / Multiple? </option>
@@ -124,11 +153,44 @@
 				</select>
 
 				<select name = "row_select" id = "row_select" onmousedown = "element_select()">
-					<option value = "0"> Row </option>
+					<option value = "0"> Rows </option>
 				</select>
 
 				<select name = "col_select" id = "col_select" onmousedown = "element_select()">
-					<option value = "0"> Col </option>
+					<option value = "0"> Columns </option>
+				</select>
+
+				<select name = "fit_select" id = "fit_select" onmousedown = "element_select()">
+					<option value = "0"> Curvefit </option>
+					<option value = "None"> None </option>
+					<option value = "Exponential"> Exponential </option>
+					<option value = "Rayleigh"> Rayleigh </option>
+					<option value = "Lognormal"> Lognormal </option>
+					<option value = "Normal"> Normal </option>
+					<option value = "Weibull"> Weibull </option>
+				</select>
+
+				<input type = "number" id = "bin_select" value = "" placeholder = "Bins">
+
+				<select name = "sector_select" id = "sector_select" onmousedown = "element_select()">
+					<option value = "0"> Sectors </option>
+					<option value = "32"> 32 </option>
+				</select>
+
+				<select name = "bin-arrange_select" id = "bin-arrange_select" onmousedown = "element_select()">
+					<option value = "0"> Bin Arrange </option>
+					<option value = "linear"> Linear </option>
+					<option value = "inverse-log"> Inverse-Log </option>
+				</select>
+
+				<select name = "color_select" id = "color_select" onmousedown = "element_select()">
+					<option value = "0"> Plot Line Colors </option>
+					<option value = "blue"> Blue </option>
+					<option value = "red"> Red </option>
+					<option value = "green"> Green </option>
+					<option value = "gray"> Gray </option>
+					<option value = "cycle"> Cycle </option>
+					<option value = "span"> Span </option>
 				</select>
 
 				<button id = "start" onclick = "element_select()"> Start </button>
@@ -138,6 +200,10 @@
 				<button id = "reset" onclick = "reloadPage()"> Reset </button>
 
 			</div>
+
+			<br>
+
+			<div id = "load"> Selecting Data... </div>
 
 			<div id = "chart">
 				<div style = "height: 800px;"></div>

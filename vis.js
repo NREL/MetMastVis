@@ -1,7 +1,7 @@
 //import "convert-csv-to-json";
 
 // Insert Documentation Here
-// test4
+// test1
 // 
 //input_files = ["2013_January.csv","2013_February.csv","2013_March.csv","2013_April.csv","2013_May.csv","2013_June.csv","2013_July.csv","2013_August.csv","2013_September.csv","2013_October.csv","2013_November.csv","2013_December.csv"];
 //input_files = ["2013_December.csv","2013_November.csv","2013_October.csv","2013_September.csv","2013_August.csv"];
@@ -584,9 +584,10 @@ function element_select() {
                             if ((start_month != 0) && (start_year != 0) && (end_month != 0) && (end_year != 0)) {
                             
                                 var month_list = get_file_range(String(start_month), parseInt(start_year), String(end_month), parseInt(end_year));
+                                console.log(month_list);
                             
                                 if (plot_type === "Cumulative Profile") {
-                            
+
                                     document.getElementById("color_select").style.display = "inline";
                                     document.getElementById("start").style.display = "inline"; 
                                     document.getElementById("next").style.display = "none";
@@ -608,6 +609,8 @@ function element_select() {
                             
                                         // everything else here
                                         if (format === "grid") {
+
+                                            document.getElementById("row_select").style.display = "inline";
                    
                                             var combos = get_grid_format(month_list.length);
                                             var select_row = document.getElementById("row_select");
@@ -649,37 +652,43 @@ function element_select() {
                                             }
 
                                             var row_select = document.getElementById("row_select").value;
-                                            var col_select = document.getElementById("col_select").value;
+
+                                            if (row_select != 0) {
+
+                                                document.getElementById("col_select").style.display = "inline";
+                                                var col_select = document.getElementById("col_select").value;
+
+                                                if (col_select != 0) {
+
+                                                    if (bin_plots().indexOf(plot_type) === -1) {
             
-                                            if ((row_select != 0) && (col_select != 0)) {
-
-                                                if (bin_plots().indexOf(plot_type) === -1) {
-            
-                                                    var bins = 999;
-
-                                                } else {
-
-                                                    document.getElementById("bin_select").style.display = "inline";
-                                                    var bins = document.getElementById("bin_select").value;
-
-                                                }
-
-                                                if (bins != "") {
-            
-                                                    document.getElementById("color_select").style.display = "inline";
-                                                    document.getElementById("start").style.display = "inline"; 
-                                                    document.getElementById("next").style.display = "none";
-                                                    var basecolor = document.getElementById("color_select").value;
-
-                                                    if (basecolor != 0) {
+                                                        var bins = 999;
+    
+                                                    } else {
+    
+                                                        document.getElementById("bin_select").style.display = "inline";
+                                                        var bins = document.getElementById("bin_select").value;
+    
+                                                    }
+    
+                                                    if (bins != "") {
                 
-                                                        parseData(createGraph, plot_type, month_list, basecolor, {category: category, abscissa: abscissa, group_by: group_by, vertloc: vertloc, range_length: range_length, format: format, row_select: row_select, col_select: col_select, curvefit: curvefit, bins: bins, nsector: nsector, bin_arrange: bin_arrange});
+                                                        document.getElementById("color_select").style.display = "inline";
+                                                        document.getElementById("start").style.display = "inline"; 
+                                                        document.getElementById("next").style.display = "none";
+                                                        var basecolor = document.getElementById("color_select").value;
+    
+                                                        if (basecolor != 0) {
+                    
+                                                            parseData(createGraph, plot_type, month_list, basecolor, {category: category, abscissa: abscissa, group_by: group_by, vertloc: vertloc, range_length: range_length, format: format, row_select: row_select, col_select: col_select, curvefit: curvefit, bins: bins, nsector: nsector, bin_arrange: bin_arrange});
+                                                        }
+    
                                                     }
 
                                                 }
 
                                             }
-
+                                            
                                         } else {
 
                                             if (bin_plots().indexOf(plot_type) === -1) {

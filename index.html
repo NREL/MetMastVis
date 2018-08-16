@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html>
 <style>
+/* #files_select_label {
+	display: none;
+}
+#files_select {
+	display: none;
+}
+#plot_select {
+	display: none;
+}
 #cat_select {
 	display: none;
 }
@@ -14,9 +23,6 @@
 	display: none;
 }
 #range_length_select {
-	display: none;
-}
-#format_select {
 	display: none;
 }
 #month_select {
@@ -35,6 +41,9 @@
 	display: none;
 }
 #end_year_select {
+	display: none;
+}
+#format_select {
 	display: none;
 }
 #row_select {
@@ -61,6 +70,9 @@
 #start {
 	display: none;
 }
+#save {
+	display: none;
+} */
 </style>
 	<head>
 		<title>Graphs from CSVs</title>
@@ -91,8 +103,18 @@
 
 			<div id = "buttons">
 
+				<!--
+				<select name = "pre_select" id = "pre_select" onmousedown = "element_select()">
+						<option value = "0"> Have JSON Data? </option>
+						<option value = "yes"> Yes </option>
+						<option value = "no"> No </option>
+				</select>
+
+				<label for = "files_select" id = "files_select_label"> Graphish and Layout Files here: </label>
+				<input type = "file" id = "files_select" accept = ".json" multiple>
+
 				<select name = "plot_select" id = "plot_select" onmousedown = "element_select()">
-						<option value = "0"> Plot type </option>
+						<option value = "0"> Plot Type </option>
 				</select>
 
 				<select name = "cat_select" id = "cat_select" onmousedown = "element_select()">
@@ -113,13 +135,6 @@
 						<option value = "0"> One Month / Multiple? </option>
 						<option value = "one_month"> One Month </option>
 						<option value = "multiple"> Multiple </option>
-				</select>
-
-				<select name = "format_select" id = "format_select" onmousedown = "element_select()">
-						<option value = "0"> Graph Format </option>
-						<option value = "dropdown"> Dropdown </option>
-						<option value = "slider"> Slider </option>
-						<option value = "grid"> Grid </option>
 				</select>
 
 				<select name = "month_select" id = "month_select" onmousedown = "element_select()">
@@ -152,6 +167,13 @@
 						<option value = "2017"> 2017 </option>						
 				</select>
 
+				<select name = "format_select" id = "format_select" onmousedown = "element_select()">
+					<option value = "0"> Graph Format </option>
+					<option value = "dropdown"> Dropdown </option>
+					<option value = "slider"> Slider </option>
+					<option value = "grid"> Grid </option>
+				</select>
+
 				<select name = "row_select" id = "row_select" onmousedown = "element_select()">
 					<option value = "0"> Rows </option>
 				</select>
@@ -174,6 +196,9 @@
 
 				<select name = "sector_select" id = "sector_select" onmousedown = "element_select()">
 					<option value = "0"> Sectors </option>
+					<option value = "4"> 4 </option>
+					<option value = "8"> 8 </option>
+					<option value = "16"> 16 </option>
 					<option value = "32"> 32 </option>
 				</select>
 
@@ -199,15 +224,134 @@
 
 				<button id = "reset" onclick = "reloadPage()"> Reset </button>
 
+				<button id = "save" onclick = "save_state()"> Save State: Yes? </button>
+				-->
+				<!--
+				<select name = "save_select" id = "save_select" onmousedown = "element_select()">
+						<option value = "0"> Save State </option>
+						<option value = "yes"> Yes </option>
+						<option value = "no"> No </option>
+				</select>
+				onchange = "plot_select(this.options[this.selectedIndex].value)" onfocus = "setPrevious(this.id)"
+				-->
+
+				<select name = "pre_select" id = "pre_select" onchange = "data_select()" style = "display: inline">
+					<option value = "null"> Have JSON Data? </option>
+					<option value = "yes"> Yes </option>
+					<option value = "no"> No </option>
+				</select> 
+
+				<label for = "files_select" id = "files_select_label" style = "display: none"> Graphish and Layout Files here: </label>
+				<input type = "file" id = "files_select" accept = ".json" multiple style = "display: none">
+
+				<input type = "hidden" id = "previous" name = "previous"></input>
+
+				<select name = "plot_select" id = "plot_select"  onmousedown = "fill_dropdown_plot()" onchange = "plot_select(this)" style = "display: none">
+					<option value = "null"> Select Plot Type </option>
+				</select>
+
+				<select name = "category_select" id = "category_select" onmousedown = "fill_dropdown_cats()" onchange = "category_select()" style = "display: none">
+					<option value = "null"> Select Category </option>
+				</select>
+
+				<select name = "abscissa_select" id = "abscissa_select" onmousedown = "fill_dropdown_cats()" onchange = "abscissa_select(this)" style = "display: none">
+					<option value = "null"> Select Abscissa </option>
+				</select>
+
+				<select name = "group-by_select" id = "group-by_select" onmousedown = "fill_dropdown_cats()" onchange = "groupby_select(this)" style = "display: none">
+					<option value = "null"> Select Group-By </option>
+				</select>
+
+				<input type = "number" id = "vertloc_select" value = ""  onchange = "vertloc_select(this)" placeholder = "Select Vertical Location" style = "display: none">
+
+				<select name = "range_length_select" id = "range_length_select" onchange = "range_length_select(this)" style = "display: none">
+					<option value = "null"> Select Number of Months </option>
+					<option value = "one_month"> One Month </option>
+					<option value = "multiple"> Multiple Months </option>
+				</select>
+
+				<select name = "month_select" id = "month_select"  onmousedown = "fill_dropdown_month()" onchange = "month_select(this)" style = "display: none">
+					<option value = "null"> Select Month </option>
+				</select>
+
+				<select name = "year_select" id = "year_select" onmousedown = "fill_dropdown_year()" onchange = "year_select(this)" style = "display: none">
+					<option value = "null"> Select Year </option>
+				</select>
+
+				<select name = "start_month_select" id = "start_month_select" onmousedown = "fill_dropdown_month()" onchange = "start_month_select(this)" style = "display: none">
+					<option value = "null"> Select Start Month </option>
+				</select>
+
+				<select name = "start_year_select" id = "start_year_select" onmousedown = "fill_dropdown_year()" onchange = "start_year_select(this)" style = "display: none">
+					<option value = "null"> Select Start Year </option>
+				</select>
+
+				<select name = "end_month_select" id = "end_month_select" onmousedown = "fill_dropdown_month()" onchange = "end_month_select(this)" style = "display: none">
+					<option value = "null"> Select End Month </option>
+				</select>
+
+				<select name = "end_year_select" id = "end_year_select" onmousedown = "fill_dropdown_year()" onchange = "end_year_select(this)" style = "display: none">
+					<option value = "null"> Select End Year </option>					
+				</select>
+
+				<select name = "format_select" id = "format_select" onchange = "format_select()" style = "display: none">
+					<option value = "null"> Select Graph Format </option>
+					<option value = "dropdown"> Dropdown </option>
+					<option value = "slider"> Slider </option>
+					<option value = "grid"> Grid </option>
+				</select>
+
+				<select name = "row_select" id = "row_select"  onmousedown = "fill_dropdown_row()" onchange = "row_select()" style = "display: none">
+					<option value = "null"> Select Number of Rows </option>
+				</select>
+
+				<select name = "col_select" id = "col_select" onmousedown = "fill_dropdown_col()" onchange = "col_select()" style = "display: none">
+					<option value = "null"> Select Number of Columns </option>
+				</select>
+
+				<input type = "number" id = "bin_select" value = "" placeholder = "Select Number of Bins" onchange = "bin_select()" style = "display: none">
+
+				<select name = "sector_select" id = "sector_select" onmousedown = "fill_dropdown_sector()" onchange = "sector_select()" style = "display: none">
+					<option value = "null"> Select Number of Sectors </option>
+				</select>
+
+				<select name = "bin-arrange_select" id = "bin-arrange_select" onmousedown = "fill_dropdown_bina()" onchange = "bin_arrange_select()" style = "display: none">
+					<option value = "null"> Select Bin Arrangement </option>
+				</select>
+
+				<select name = "curvefit_select" id = "curvefit_select" onmousedown = "fill_dropdown_curvefit()" onchange = "curvefit_select()" style = "display: none">
+					<option value = "null"> Select Curvefit </option>
+				</select>
+
+				<select name = "color_select" id = "color_select" onmousedown = "fill_dropdown_color()" onchange = "color_select()" style = "display: none">
+					<option value = "null"> Select Color </option>
+				</select>
+
+				<button id = "start_plot" onclick = "start_plot()" style = "display: none"> Start Plot </button>
+
+				<button id = "save" onclick = "save_state()" style = "display: none"> Save State: Yes? </button>
+
+				<button id = "prev_plot" onclick = "prev_plot()"> Show/Hide Previous Plot? </button>
+
+				<button id = "prev_sel" onclick = "prev_sel()"> Show/Hide Previous Selections? </button>
+
+				<button id = "reset" onclick = "reloadPage()"> Reset </button>
+
 			</div>
 
 			<br>
 
 			<div id = "load"> Selecting Data... </div>
 
-			<div id = "chart">
-				<div style = "height: 800px;"></div>
-			</div>
+			<table id = "var_table" border = "1px solid black">
+				<tr>
+					<th colspan = "2"> Previous Selections </th>
+				</tr>
+			</table>
+
+			<div id = "prev_chart" style = "height: 700px;"></div>
+
+			<div id = "chart" style = "height: 700px;"></div>
 
 		</div>
 		<!--Utilities for plotting -->

@@ -1,3 +1,127 @@
+<noinclude>This widget helps with the Met Mast Portal Dashboard content.
+
+<pre>
+{{#Widget:MetMastVis}}
+</pre>
+
+[[Category:Widgets]]
+[[Category:NWTC]]
+[[Category:MetMast]]
+
+</noinclude>
+<includeonly><!--Widget:MetMastVis-->
+
+<!-- Load LaTeX rendering -->
+<script src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-AMS-MML_SVG" async type="text/javascript"></script>
+<!-- Load d3.js and other visualization libraries -->
+<script src = "http://d3js.org/d3.v3.min.js" charset = "utf-8" type="text/javascript"></script>
+<script src = "https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>
+<script src = "https://cdn.plot.ly/plotly-latest.min.js"type="text/javascript"></script>
+<!-- Load papaparse.js -->
+<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js" type="text/javascript"></script>
+
+<select name = "pre_select" id = "pre_select" onchange = "data_select()">
+ <option value = "null"> Have JSON Data-56? </option>
+ <option value = "yes"> Yes </option>
+ <option value = "no"> No </option>
+</select> 
+
+<label for = "files_select" id = "files_select_label"> Graphish and Layout Files here: </label>
+<input type = "file" id = "files_select" accept = ".json" multiple>
+
+<select name = "plot_select" id = "plot_select"  onmousedown = "fill_dropdown_plot()" onchange = "plot_select(this)">
+ <option value = "null"> Select Plot Type </option>
+</select>
+
+<select name = "category_select" id = "category_select" onmousedown = "fill_dropdown_cats()" onchange = "category_select()">
+ <option value = "null"> Select Category </option>
+</select>
+
+<select name = "abscissa_select" id = "abscissa_select" onmousedown = "fill_dropdown_cats()" onchange = "abscissa_select(this)">
+ <option value = "null"> Select Abscissa </option>
+</select>
+
+<select name = "group-by_select" id = "group-by_select" onmousedown = "fill_dropdown_cats()" onchange = "groupby_select(this)">
+ <option value = "null"> Select Group-By </option>
+</select>
+
+<input type = "number" id = "vertloc_select" value = ""  onchange = "vertloc_select(this)" placeholder = "Select Vertical Location">
+
+<select name = "range_length_select" id = "range_length_select" onchange = "range_length_select(this)">
+ <option value = "null"> Select Number of Months </option>
+ <option value = "one_month"> One Month </option>
+ <option value = "multiple"> Multiple Months </option>
+</select>
+
+<select name = "month_select" id = "month_select"  onmousedown = "fill_dropdown_month()" onchange = "month_select(this)">
+ <option value = "null"> Select Month </option>
+</select>
+
+<select name = "year_select" id = "year_select" onmousedown = "fill_dropdown_year()" onchange = "year_select(this)">
+ <option value = "null"> Select Year </option>
+</select>
+
+<select name = "start_month_select" id = "start_month_select" onmousedown = "fill_dropdown_month()" onchange = "start_month_select(this)">
+ <option value = "null"> Select Start Month </option>
+</select>
+
+<select name = "start_year_select" id = "start_year_select" onmousedown = "fill_dropdown_year()" onchange = "start_year_select(this)">
+ <option value = "null"> Select Start Year </option>
+</select>
+
+<select name = "end_month_select" id = "end_month_select" onmousedown = "fill_dropdown_month()" onchange = "end_month_select(this)">
+ <option value = "null"> Select End Month </option>
+</select>
+
+<select name = "end_year_select" id = "end_year_select" onmousedown = "fill_dropdown_year()" onchange = "end_year_select(this)">
+ <option value = "null"> Select End Year </option>					
+</select>
+
+<select name = "format_select" id = "format_select" onchange = "format_select()">
+ <option value = "null"> Select Graph Format </option>
+ <option value = "dropdown"> Dropdown </option>
+ <option value = "slider"> Slider </option>
+ <option value = "grid"> Grid </option>
+</select>
+
+<select name = "row_select" id = "row_select"  onmousedown = "fill_dropdown_row()" onchange = "row_select()">
+ <option value = "null"> Select Number of Rows </option>
+</select>
+
+<select name = "col_select" id = "col_select" onmousedown = "fill_dropdown_col()" onchange = "col_select()">
+ <option value = "null"> Select Number of Columns </option>
+</select>
+
+<input type = "number" id = "bin_select" value = "" placeholder = "Select Number of Bins" onchange = "bin_select()">
+
+<select name = "sector_select" id = "sector_select" onmousedown = "fill_dropdown_sector()" onchange = "sector_select()">
+ <option value = "null"> Select Number of Sectors </option>
+</select>
+
+<select name = "bin-arrange_select" id = "bin-arrange_select" onmousedown = "fill_dropdown_bina()" onchange = "bin_arrange_select()">
+ <option value = "null"> Select Bin Arrangement </option>
+</select>
+
+<select name = "curvefit_select" id = "curvefit_select" onmousedown = "fill_dropdown_curvefit()" onchange = "curvefit_select()">
+ <option value = "null"> Select Curvefit </option>
+</select>
+
+<select name = "color_select" id = "color_select" onmousedown = "fill_dropdown_color()" onchange = "color_select()">
+ <option value = "null"> Select Color </option>
+</select>
+
+<button id = "start_plot" onclick = "start_plot()"> Start Plot </button>
+
+<button id = "save" onclick = "save_state()"> Save State: Yes? </button>
+
+<button id = "prev_sel" onclick = "prev_sel()"> Show/Hide Previous Selections? </button>
+
+<button id = "prev_plot" onclick = "prev_plot()"> Show/Hide Previous Plot? </button>
+
+<button id = "reset" onclick = "reloadPage()"> Reset </button>
+
+<script>
+
 //import "convert-csv-to-json";
 
 // Insert Documentation Here
@@ -22,13 +146,19 @@
 function parseData(createGraph, plot_type, month_list, basecolor, {category, abscissa, group_by, vertloc, range_length, format, row_select, col_select, curvefit, bins, nsector, bin_arrange} = {}) {
 
     var all_results = [];
+    load.innerText = "Loading...";
     console.log(month_list);
 
-    load.innerText = "Loading...";
+    var url_list = [];
+    for (var m = 0; m < month_list.length; m++) {
+        url_list.push("https://s3-us-west-2.amazonaws.com/nrel-nwtc-metmast-uni/int/" + month_list[m]);
+    }
+
+    console.log(url_list);
 
     //for (var k = 0; k < input_files.length; k++) {
     for (var k = 0; k < month_list.length; k++) {
-        Papa.parse(month_list[k], {
+        Papa.parse(url_list[k], {
             download: true,
 
             complete: function(results) {
@@ -39,49 +169,7 @@ function parseData(createGraph, plot_type, month_list, basecolor, {category, abs
                 }
 
             }
-
-        }); 
-
-    }
-
-}
-
-function testRequest(month_string) {
-
-    var final_data = [];
-    var month_mat = [];
-
-    for (var ml = 0; ml < month_string.length; ml++) {
-
-        $.ajax({
-        // url: 'https://s3-us-west-2.amazonaws.com/nrel-nwtc-metmast-uni/int/dt=2017-01/2017_January.csv',
-        url: 'https://s3-us-west-2.amazonaws.com/nrel-nwtc-metmast-uni/int/' + month_string[ml],
-        dataType: 'text',
-        success: function(data) {
-            final_data.push(data);
-        },
-        error: function (e) {
-            month_mat.push(month_string[ml]);
-            setInnerHTML("csv_data", e.error);
-        }
-        });
-
-    }
-
-    if (final_data.length != month_string.length) {
-
-        var output_message = "";
-
-        for (var f = 0; f < month_mat.length; f++) {
-            output_message += (month_mat[f] + " ");
-        }
-
-        alert("You are missing the following files:")
-
-    } else {
-
-        return final_data;
-
+        });   
     }
 
 }
@@ -307,7 +395,7 @@ function titleCase(str) {
     } else {
     
         return str;
-
+        
     }
 
 }
@@ -426,22 +514,13 @@ function curvefit_plots() {
 
 function remove_dropdowns(current_id) {
 
-    // var element = document.getElementById("chart");
-    // var class_name = element.className;
-
-    // if (class_name === "js-plotly-plot") {
-
-    //     element.innerHTML = "";
-
-    // }
-
     var ids = document.querySelectorAll('[id]');
     var id_array = Array.prototype.map.call(ids, function(element, anything) {
         return element.id;
     });
 
     var index_start = id_array.indexOf(current_id);
-    var index_end = id_array.indexOf("reset");
+    var index_end = id_array.indexOf("prev_sel");
 
     // +1 so you don't remove the current ID
     for (var rma = index_start+1; rma < index_end; rma++) {
@@ -683,6 +762,13 @@ function get_plot_inputs(pt, rl) {
     var plot_input_list = plot_inputs_obj[pt];
 
     return plot_input_list;
+
+}
+
+function setPrevious(id) {
+
+    document.getElementById("previous").value = document.getElementById(id).selectedIndex;
+    //console.log(document.getElementById(id).value);
 
 }
 
@@ -1329,25 +1415,34 @@ function color_select() {
 
 function prev_plot() {
 
-    var table_state = document.getElementById("prev_chart").style.display;
-    
-    if (table_state === "none") {
+    var plotly_info = state_saver2.getState();
 
-        load.innerText = "Loading...";
-
-        document.getElementById("prev_chart").style.display = "inline";
-
-        var plotly_info = state_saver2.getState();
-        var graphish = plotly_info[0];
-        var layout = plotly_info[1];
-
-        Plotly.newPlot("prev_chart", graphish, layout)
-
-        load.innerText += "Done!";
+    if (plotly_info == undefined) {
+ 
+        alert("Meanie ... you tried to break me! You have no previous plots!");
 
     } else {
 
-        document.getElementById("prev_chart").style.display = "none";
+        var prev_plot_state = document.getElementById("prev_chart").style.display;
+    
+        if (prev_plot_state != "inline") {
+
+            load.innerText = "Loading...";
+
+            document.getElementById("prev_chart").style.display = "inline";
+
+            var graphish = plotly_info[0];
+            var layout = plotly_info[1];
+
+            Plotly.newPlot("prev_chart", graphish, layout)
+
+            load.innerText += "Done!";
+
+        } else {
+
+            document.getElementById("prev_chart").style.display = "none";
+
+        }
 
     }
 
@@ -1357,7 +1452,7 @@ function prev_sel() {
 
     var table_state = document.getElementById("var_table").style.display;
     
-    if (table_state === "none") {
+    if (table_state != "inline") {
 
         document.getElementById("var_table").style.display = "inline";
 
@@ -1438,8 +1533,8 @@ function start_plot(start_type) {
 
         if (range_length === "one_month") {
 
-            var month_final = String(document.getElementById("month_select").value);
-            var year_final = String(document.getElementById("year_select").value);
+            var month_final = document.getElementById("month_select").value;
+            var year_final = document.getElementById("year_select").value;
 
             if (plot_type === "Extra Profile") {
 
@@ -1452,7 +1547,6 @@ function start_plot(start_type) {
             }
 
             var input_file_list = [];
-            console.log(input_file_string);
             input_file_list.push(input_file_string);
 
         } else {
@@ -1508,7 +1602,7 @@ function start_plot(start_type) {
     
         }
     
-        alert('Missing "' + final_string + '" Dropdown Input');
+        alert('Why you so mean to me and want to break me :(?? Missing "' + final_string + '" Dropdown Input');
 
     }
 
@@ -1785,6 +1879,7 @@ function createGraph(all_results, plot_type, new_files, basecolor, {category, ab
     load.innerText += "Done!";
 
     document.getElementById("save").style.display = "inline";
+    document.getElementById("prev_plot").style.display = "inline";
     document.getElementById("prev_sel").style.display = "inline";
     state_saver2.changeState(state_saver.getState());
     state_saver.changeState([graphish,layout]);
@@ -2567,10 +2662,10 @@ function monthly_stab_prof(all_results, input_files, category, vertloc, basecolo
 
     if ((format === "dropdown") | (format === "slider")) {
 
-        var buttons = [];
+        buttons = [];
         for (var j = 0; j < input_files.length; j++){
             // This array decides when to display a certain trace
-            var false_array = [];
+            false_array = [];
             for(var i = 0; i < input_files.length; i++) {
                 if (i == j) {
                     for(var sc1 = 0; sc1 < stabconds.length; sc1++) {
@@ -2593,15 +2688,15 @@ function monthly_stab_prof(all_results, input_files, category, vertloc, basecolo
 
     if (format === "slider") {
 
-        var steps = buttons;
+        steps = buttons;
 
     }
 
     // set the string labels
-    var xstring = "$$" + cate_info["labels"][category] + "$$";
-    var ystring = "$$ \\text{Probe Height} [m] $$";
+    xstring = "$$" + cate_info["labels"][category] + "$$";
+    ystring = "$$ \\text{Probe Height} [m] $$";
     // need to add $$ for LaTeX to process
-    var title_string = "$$ \\text{" + titleCase(category) + " vs. } " + ystring.replace("$$","") + " $$"; 
+    title_string = "$$ \\text{" + titleCase(category) + " vs. } " + ystring.replace("$$","") + " $$"; 
 
     var diff = max_x - min_x;
 
@@ -3121,7 +3216,7 @@ function rose_fig(all_results, input_files, category, vertloc, basecolor, bins, 
         }
 
     }
-
+    
     var vari_old = metdat[varcol].filter(Boolean);
     var vari = [];
     for (var v = 0; v < vari_old.length; v++) {
@@ -3159,7 +3254,6 @@ function rose_fig(all_results, input_files, category, vertloc, basecolor, bins, 
         for (var i = 0; i < bins; i++) {
             bin_mags.push(startValue + (step * i));
         }
-
     }
 
     if (bin_arrange === "Inverse-Log") {
@@ -3198,16 +3292,14 @@ function rose_fig(all_results, input_files, category, vertloc, basecolor, bins, 
             } else {
                 count[Object.keys(dir_obj)[key]].push(numb/vari.length);
             }
-
         }
-
     }
-
 
     var t_mat = [];
     for (var cd = 0; cd < nsector; cd++) {
         t_mat.push(getCardinal(cd*(360/nsector)+1,nsector));
     }   
+
 
     for (var bi = 0; bi < bins; bi++) {
         var r_mat = [];
@@ -3230,7 +3322,7 @@ function rose_fig(all_results, input_files, category, vertloc, basecolor, bins, 
     }
 
     var layout = {
-        title: "$$" + cate_info["labels"][category] + "\\text{ Distribution for " + input_files[0].replace("_"," ").replace(".csv","") + " } $$",
+        title: "$$" + cate_info["labels"][category] + "\\text{ Distribution} $$",
         orientation: 270,
         annotations: [{text: "Wind Speed", xref: "paper", yref: "paper",
                     x: 0, y: 0, showarrow: false, font: {size: 20}}]
@@ -5800,3 +5892,6 @@ function monthly_norm_hist_by_stab(all_results, input_files, vertloc, basecolor,
 }
 
 // ///////////////////////////////////////////////////////////////
+
+</script>
+</includeonly>

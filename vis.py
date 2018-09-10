@@ -22,28 +22,28 @@ plt.rc('facecolor')
 
 ###########################################
 def cumulative_profile(metdat, catinfo, category=None):
-###########################################
+    ###########################################
     """
     Plot vertical profile of a given variable (or category of variables) grouped by a given condition (or set of conditions)
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
         basecolor:
             string with the color code info to get from utils.
     """
-    
+
     if category is None:
         print('not sure what to plot...')
         pass
-    
+
     # extract vertical locations of data from variable names
-    colnames, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category]) 
- 
+    colnames, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category])
+
     plotdat = metdat[colnames].mean()
 
     fig, ax = plt.subplots(figsize=(3.5,5))
@@ -52,20 +52,20 @@ def cumulative_profile(metdat, catinfo, category=None):
     ax.set_ylabel('Probe Height [m]')
     ax.set_xlabel(catinfo['labels'][category])
     fig.tight_layout()
-        
+
     return fig, ax
 ###########################################
 
 ###########################################
 def monthly_profile(metdat, catinfo, category=None, basecolor='cycle'):
-###########################################
+    ###########################################
     """
     Plot monthly average profiles against one another.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -80,7 +80,7 @@ def monthly_profile(metdat, catinfo, category=None, basecolor='cycle'):
     months = utils.monthnames()
     colors = utils.get_colors(len(months), basecolor=basecolor)
     colnames, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category])
-    
+
     plotdat = metdat[colnames].groupby(metdat.index.month).mean()
 
     fig, ax = plt.subplots(figsize=(3.5,5), sharex=True, sharey=True)
@@ -92,20 +92,20 @@ def monthly_profile(metdat, catinfo, category=None, basecolor='cycle'):
     ax.set_xlabel(catinfo['labels'][category])
 
     fig.tight_layout()
-    
+
     return fig, ax
 ###########################################
 
 ###########################################
 def stability_profile(metdat, catinfo, category=None, vertloc=80, basecolor='span'):
-###########################################
+    ###########################################
     """
     Plot cumulative average profiles sorted by stability.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -121,38 +121,39 @@ def stability_profile(metdat, catinfo, category=None, vertloc=80, basecolor='spa
     stab, stabloc, ind = utils.get_vertical_locations(catinfo['columns']['stability flag'], location=vertloc)
     colors = utils.get_colors(5,basecolor=basecolor)
     stabconds = utils.get_stabconds()
-    
-    plotdat = metdat.groupby(stab).mean()
-    pdat = plotdat[catinfo['columns'][category]].get_values()
-    
+
     # extract vertical locations of data from variable names
-    _, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category]) 
-    
-    fig, ax = plt.subplots(figsize=(3.5,5))
+    _, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category])
+
+    plotdat = metdat.groupby(stab).mean()
+    pdat = plotdat[catinfo['columns'][category]].T.iloc[ind]
+
+    fig, ax = plt.subplots(figsize=(3.5, 5))
+
     for ii, cond in enumerate(stabconds):
 
-        ax.plot(pdat[ii,ind], vertlocs, color=colors[ii])
+        ax.plot(pdat[cond], vertlocs, color=colors[ii], label=cond)
 
     ax.set_ylabel('Probe Height [m]')
     ax.set_xlabel(catinfo['labels'][category])
     fig.legend(stabconds, loc=6, bbox_to_anchor=(1,0.5), frameon=False)
 
     fig.tight_layout()
-    
+
     return fig, ax
 ###########################################
 
 
 ###########################################
 def monthly_stability_profiles(metdat, catinfo, category=None, vertloc=80, basecolor='span'):
-###########################################
+    ###########################################
     """
     Plot monthly average profiles against one another.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -173,15 +174,15 @@ def monthly_stability_profiles(metdat, catinfo, category=None, vertloc=80, basec
     stabconds = utils.get_stabconds()
 
     # extract vertical locations of data from variable names
-    _, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category]) 
+    _, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category])
 
     fig, ax = plt.subplots(4,3, figsize=(8,13), sharex=True, sharey=True)
     for iax, month in enumerate(months):
-        
+
         for ii, cond in enumerate(stabconds):
 
             pdat = plotdat[catinfo['columns'][category]].get_group((iax+1, cond)).mean()
-            ax.flatten()[iax].plot(pdat[ind], vertlocs, color=colors[ii])
+            ax.flatten()[iax].plot(pdat[ind], vertlocs, color=colors[ii], label=cond)
 
         ax.flatten()[iax].set_title(month)
 
@@ -198,14 +199,14 @@ def monthly_stability_profiles(metdat, catinfo, category=None, vertloc=80, basec
 
 ###########################################
 def hourlyplot(metdat, catinfo, category=None, basecolor='span'):
-###########################################
+    ###########################################
     """
     Plot monthly average profiles against one another.
      Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -218,9 +219,9 @@ def hourlyplot(metdat, catinfo, category=None, basecolor='span'):
 
     colors = utils.get_colors(len(catinfo['columns'][category]), basecolor=basecolor, reverse=True)
     colnames, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category], reverse=True)
-    
+
     plotdat = metdat[colnames].groupby(metdat.index.hour).mean()
-    
+
     fig, ax = plt.subplots(figsize=(5,3), sharex=True, sharey=True)
     for iax in range(len(colnames)):
         ax.plot(plotdat[colnames[iax]], color=colors[iax])
@@ -230,21 +231,21 @@ def hourlyplot(metdat, catinfo, category=None, basecolor='span'):
     ax.set_ylabel(catinfo['labels'][category])
 
     fig.tight_layout()
-    
+
     return fig, ax
 ###########################################
 
 
 ###########################################
 def monthlyhourlyplot(metdat, catinfo, category=None, basecolor='span'):
-###########################################
+    ###########################################
     """
     Plot monthly average profiles against one another.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -258,16 +259,16 @@ def monthlyhourlyplot(metdat, catinfo, category=None, basecolor='span'):
     months = utils.monthnames()
     colors = utils.get_colors(len(catinfo['columns'][category]), basecolor=basecolor, reverse=True)
     colnames, vertlocs, ind = utils.get_vertical_locations(catinfo['columns'][category], reverse=True)
-    
+
     plotdat = metdat[colnames].groupby([metdat.index.month, metdat.index.hour]).mean()
-    
+
     fig, ax = plt.subplots(4,3, figsize=(9,11), sharex=True, sharey=True)
     for iax in range(len(months)):
         for catitem in range(len(colnames)):
             ax.flatten()[iax].plot(plotdat[colnames[catitem]].xs(iax+1), color=colors[catitem])
         ax.flatten()[iax].set_title(months[iax], fontsize=12)
-    
-    
+
+
     fig.text(0.5,0.2, 'Time of Day [hour]', ha='center', va='center')
     leg = fig.legend([str(v) + ' m' for v in vertlocs], loc = 'upper center', bbox_to_anchor = (0,-0.825,1,1), bbox_transform = plt.gcf().transFigure, frameon=False, ncol=2)
     fig.tight_layout()
@@ -279,14 +280,14 @@ def monthlyhourlyplot(metdat, catinfo, category=None, basecolor='span'):
 
 ###########################################
 def rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector=36, ylim=None, noleg=False):
-###########################################
+    ###########################################
     """
     make wind rose from pandas.Series wind direction and some other value of the same size.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -299,9 +300,9 @@ def rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector=36, yli
         nsector:
             number or direction sectors to divide rose
         ylim:
-            optional float with maximum value for frequency of observations, use to 
+            optional float with maximum value for frequency of observations, use to
             plot different roses with uniform limits
-        noleg: 
+        noleg:
             bool switch to turn legend off
     """
 
@@ -321,7 +322,7 @@ def rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector=36, yli
     colors = utils.get_colors(nbins-1, basecolor='span')
     colors += ['#3A4246'] # add something dark to the end.
     colors = tuple(colors[0:nbins])
-    
+
     # built figure
     fig = plt.figure()
     ax = WindroseAxes.from_ax(fig=fig)
@@ -344,20 +345,20 @@ def rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector=36, yli
     ax.set_yticks(np.linspace(0,ylim,4))
     ax.set_yticklabels([str(round(x,1)) for x in np.linspace(0,ylim,4)])
 
-         
+
     return fig, ax, leg
 ###########################################
 
 ###########################################
 def monthly_rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector=36, ylim=None, noleg=False):
-###########################################
+    ###########################################
     """
     make wind rose from pandas.Series wind direction and some other value of the same size.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -370,12 +371,12 @@ def monthly_rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector
         nsector:
             number or direction sectors to divide rose
         ylim:
-            optional float with maximum value for frequency of observations, use to 
+            optional float with maximum value for frequency of observations, use to
             plot different roses with uniform limits
-        noleg: 
+        noleg:
             bool switch to turn legend off
     """
-    
+
     # set up data
     dircol, _, _= utils.get_vertical_locations(catinfo['columns']['direction'], location=vertloc)
     varcol, vertloc, _= utils.get_vertical_locations(catinfo['columns'][category], location=vertloc)
@@ -424,21 +425,21 @@ def monthly_rose_fig(metdat, catinfo, category=None, vertloc=80, bins=6, nsector
         ylim = 0.0
         for iax,month in enumerate(months):
             ylim = np.max([ylim, axes[iax].get_ylim()[-1]])
-    
+
     for iax,month in enumerate(months):
         axes[iax].set_ylim(0,ylim)
         axes[iax].set_yticks(np.linspace(0.0,ylim,4))
         # print(axes[iax].get_yticks())
         axes[iax].set_yticklabels([str(np.round(x,decimals=1)) for x in axes[iax].get_yticks()])
 
-    fig.tight_layout() 
+    fig.tight_layout()
 
     return fig, axes, leg
 ###########################################
 
 ###########################################
 def winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', exclude_angles=[(46, 228)]):
-###########################################
+    ###########################################
     """
     make scatter plot from pandas.Series wind direction and some other value of the same size. Includes blocked off angles from IEC standards.
         Plot monthly average profiles against one another.
@@ -446,7 +447,7 @@ def winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', excl
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -458,12 +459,12 @@ def winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', excl
             tuple or list of tuples of start and stop angles to shade out regions according to IEC standards
     """
 
-     # set up data
+    # set up data
     dircol, _, _= utils.get_vertical_locations(catinfo['columns']['direction'], location=vertloc)
     varcol, vertloc, _= utils.get_vertical_locations(catinfo['columns'][category], location=vertloc)
 
     colors = utils.get_nrelcolors()
-    
+
     fig = plt.figure(figsize=(8,2.5))
     ax  = fig.add_subplot(111)
 
@@ -475,13 +476,13 @@ def winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', excl
     # ax.set_title(r'$z={}$ m'.format(vertloc))
     ax.set_xlabel(r'Wind Direction [$^\circ$]')
     ax.set_ylabel(catinfo['labels'][category])
-    
+
     return fig, ax#, leg
 ###########################################
 
 ###########################################
 def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', exclude_angles=[(46, 228)]):
-###########################################
+    ###########################################
     """
     make scatter plot from pandas.Series wind direction and some other value of the same size. Includes blocked off angles from IEC standards.
     Subplots correspond to stability conditions from Obukhov length
@@ -489,7 +490,7 @@ def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -500,18 +501,18 @@ def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='
         exclude_angles:
             tuple or list of tuples of start and stop angles to shade out regions according to IEC standards
     """
-    
+
     stabconds = utils.get_stabconds()
     colors = utils.get_colors(5,basecolor='span')
     nrelcolors = utils.get_nrelcolors()
 
-     # set up data
+    # set up data
     dircol, _, _= utils.get_vertical_locations(catinfo['columns']['direction'], location=vertloc)
     varcol, vertloc, _= utils.get_vertical_locations(catinfo['columns'][category], location=vertloc)
     stabcol, _, _= utils.get_vertical_locations(catinfo['columns']['stability flag'], location=vertloc)
 
     # dirind = utils.get_nearest_direction(metdat[category])
-    
+
     fig, ax = plt.subplots(5,1, sharex=True, sharey=True, figsize=(6,8))
 
     plotdat = metdat.groupby(stabcol)
@@ -526,12 +527,12 @@ def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='
         ax.flatten()[ind].legend([stabcond], fontsize=12, loc=1, frameon=False)
 
         for ii in range(len(exclude_angles)):
-             ax.flatten()[ind].axvspan(exclude_angles[ii][0], exclude_angles[ii][1], alpha=0.1, color=nrelcolors[basecolor][0])
+            ax.flatten()[ind].axvspan(exclude_angles[ii][0], exclude_angles[ii][1], alpha=0.1, color=nrelcolors[basecolor][0])
 
         # if ind == 0:
         #      ax.flatten()[ind].set_title(r'$z={}$ m'.format(vertloc))
-    
-    
+
+
     fig.tight_layout()
     fig.text(0.5,0, r'Wind Direction [$^\circ$]', ha='center', va='center')
     fig.text(0, 0.5, catinfo['labels'][category], ha='center', va='center', rotation='vertical')
@@ -541,14 +542,14 @@ def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='
 
 ###########################################
 def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti', nbins=5, vertloc=80, basecolor='span'):
-###########################################
+    ###########################################
     """
     make scatter plot from pandas.Series wind direction and some other value of the same size. Includes blocked off angles from IEC standards.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -556,7 +557,7 @@ def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti
             independet variable category to plot agains
         groupby:
             string describing column or category to use for groupby
-        nbins: 
+        nbins:
             used to cut groupyby values into bins
         vertloc:
             int or float describing the exact or approximate height of interest along the tower
@@ -570,11 +571,11 @@ def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti
 
     temp = pd.cut(metdat[groupcol],5)
     plotdat = metdat[[varcol,abscol,groupcol]].groupby(temp)
-    
+
     groups = list(plotdat.indices.keys())
 
     colors = utils.get_colors(len(groups), basecolor=basecolor)
-    
+
     fig, ax = plt.subplots(figsize=(5,3), sharex=True, sharey=True)
 
     for iax,group in enumerate(groups):
@@ -583,24 +584,24 @@ def groupby_scatter(metdat, catinfo, category, abscissa='direction', groupby='ti
     leg.set_title(catinfo['labels'][groupby])
     # labels
     ax.set_xlabel(catinfo['labels'][abscissa])
-    ax.set_ylabel(catinfo['labels'][category])  
+    ax.set_ylabel(catinfo['labels'][category])
     # ax.set_title(r'$z={}$ m'.format(vertloc))
 
     fig.tight_layout()
-    
+
     return fig, ax #, leg
 ###########################################
 
 ###########################################
 def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', title=False, fit=False, bins=35, labels=True):
-###########################################
+    ###########################################
     """
     Histogram of a given field without any sorting.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -618,12 +619,12 @@ def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', title=False, f
     data = metdat[varcol].dropna(how='any')
 
     fig, ax = plt.subplots(figsize=(5,3))
-    n,histbins,patches = ax.hist(data, 
-                                    bins = bins, 
-                                    facecolor=color, 
+    n,histbins,patches = ax.hist(data,
+                                    bins = bins,
+                                    facecolor=color,
                                     edgecolor='k',
                                     weights=np.ones(len(data)) / len(data), density=False)
-    
+
     if fit is 'weibull':
         fit_weibull(data, ax)
 
@@ -641,11 +642,11 @@ def hist(metdat, catinfo, category, vertloc=80, basecolor='blue', title=False, f
     fig.tight_layout()
 
     return fig, ax
-###########################################   
+###########################################
 
 ###########################################
 def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9), gamma=-0.5):
-###########################################
+    ###########################################
     """
     Fit a skewed Gaussian distribution to wind speed data
     paramters:
@@ -677,9 +678,9 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9),
     result = model.fit(yvals, params, x=xvals)
     fitdat = result.best_fit / len(data)
 
-    ax.plot(xvals, result.best_fit* 1.0/float(len(data)), color=pcolor, linewidth=2.5) 
+    ax.plot(xvals, result.best_fit* 1.0/float(len(data)), color=pcolor, linewidth=2.5)
     if labels is True:
-        
+
         gamma = np.round(result.params['gamma'].value,2)
         sigma = np.round(result.params['sigma'].value,2)
         center = np.round(result.params['center'].value,2)
@@ -692,18 +693,18 @@ def fit_skewedgaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9),
             xcoord = 0.05
             align='left'
         if xy[0] > 1:
-            xcoord=0  
-            align='right'  
+            xcoord=0
+            align='right'
 
         xy = (xcoord+xy[0], xy[1])
-        ax.annotate(s='$A = {}$\n$\mu = {}$\n$\gamma = {}$\n$\sigma = {}$'.format(amp,center,gamma,sigma), 
+        ax.annotate(s='$A = {}$\n$\mu = {}$\n$\gamma = {}$\n$\sigma = {}$'.format(amp,center,gamma,sigma),
             xy=xy, xycoords='axes fraction', ha=align, va='top')
 ###########################################
 
 
 ###########################################
 def fit_gaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9), gamma=-0.5):
-###########################################
+    ###########################################
     """
     Fit a Gaussian distribution to wind speed data
     paramters:
@@ -735,9 +736,9 @@ def fit_gaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9), gamma
     result = model.fit(yvals, params, x=xvals)
     fitdat = result.best_fit / len(data)
 
-    ax.plot(xvals, result.best_fit* 1.0/float(len(data)), color=pcolor, linewidth=2.5) 
+    ax.plot(xvals, result.best_fit* 1.0/float(len(data)), color=pcolor, linewidth=2.5)
     if labels is True:
-        
+
         # gamma = np.round(result.params['gamma'].value,2)
         sigma = np.round(result.params['sigma'].value,2)
         center = np.round(result.params['center'].value,2)
@@ -748,17 +749,17 @@ def fit_gaussian(data, bins, ax, labels=True, basecolor='red', xy=(0,0.9), gamma
         else:
             xcoord = 0.05
         if xy[0] > 1:
-            xcoord=0    
+            xcoord=0
 
         xy = (xcoord+xy[0], xy[1])
-        ax.annotate(s='$A = {}$\n$\mu = {}$\n$\gamma = {}$\n$\sigma = {}$'.format(amp,center,gamma,sigma), 
+        ax.annotate(s='$A = {}$\n$\mu = {}$\n$\gamma = {}$\n$\sigma = {}$'.format(amp,center,gamma,sigma),
             xy=xy, xycoords='axes fraction', ha='right', va='top')
 
 ###########################################
 
 ###########################################
 def fit_weibull(data, ax, labels=True, basecolor='red', xy=(0.95,0.9)):
-###########################################
+    ###########################################
     """
     Fit a weibull distribution to wind speed data
     paramters:
@@ -778,17 +779,17 @@ def fit_weibull(data, ax, labels=True, basecolor='red', xy=(0.95,0.9)):
 
     # get limiting value (~1)
     fixpt = 1.0-np.finfo(float).eps
-    
+
     # get x values along axis
-    xmin, xmax = data.min(), data.max() 
+    xmin, xmax = data.min(), data.max()
     xdata = np.linspace(xmin, xmax, len(data))
-    
-    # fit a weibull distribution 
-    # floc=0 keeps the location fixed at zero, 
+
+    # fit a weibull distribution
+    # floc=0 keeps the location fixed at zero,
     # f0=1 keeps the first shape parameter of the exponential weibull fixed at 1
     fitparams = stats.exponweib.fit(data, floc=0, f0=fixpt)
-    fitdat = stats.exponweib.pdf(xdata, *fitparams) # now get theoretical values in our interval  
-    
+    fitdat = stats.exponweib.pdf(xdata, *fitparams) # now get theoretical values in our interval
+
     # add fit to plot and annotate
     ax.plot(xdata, fitdat, label="Weib", color=pcolor)
     if labels is True:
@@ -802,14 +803,14 @@ def fit_weibull(data, ax, labels=True, basecolor='red', xy=(0.95,0.9)):
 
 ###########################################
 def monthly_hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=False):
-###########################################
+    ###########################################
     """
     Histogram of a given field without any sorting.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -818,11 +819,11 @@ def monthly_hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=Fa
         basecolor:
             string with the color code info to get from utils.
     """
-    
+
     colors = utils.get_nrelcolors()
     color = colors[basecolor][0]
     months = utils.monthnames()
-    
+
     # set up data
     varcol, vertloc, _= utils.get_vertical_locations(catinfo['columns'][category], location=vertloc)
 
@@ -833,12 +834,12 @@ def monthly_hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=Fa
     bins = np.arange(metdat[varcol].dropna().min(),metdat[varcol].dropna().max(), binwidth)
 
     fig, ax = plt.subplots(4,3, figsize=(9,9), sharex=True, sharey=True)
-    
+
     for im,month in enumerate(months):
         data = temp.get_group(im+1).dropna()
-        n,histbins,patches = ax.flatten()[im].hist(data, 
-                              bins=bins, 
-                              color=color, 
+        n,histbins,patches = ax.flatten()[im].hist(data,
+                              bins=bins,
+                              color=color,
                               edgecolor='k',
                               weights=np.ones(len(data))/len(data))
         ax.flatten()[im].set_title(month, fontsize=12)
@@ -848,13 +849,13 @@ def monthly_hist(metdat, catinfo, category, vertloc=80, basecolor='blue', fit=Fa
     fig.tight_layout()
     fig.text(0,0.5,'Frequency [%]',rotation='vertical', ha='center', va='center')
     fig.text(0.5,0,catinfo['labels'][category], ha='center', va='center')
-        
+
     return fig, ax
-###########################################   
+###########################################
 
 ###########################################
 def hist_by_stability(metdat, catinfo, category, vertloc=80, basecolor='span'):
-###########################################
+    ###########################################
     """
     make histograms separating the variable (colname) by stability class.
     stability is the list of column names containing stability flags
@@ -862,7 +863,7 @@ def hist_by_stability(metdat, catinfo, category, vertloc=80, basecolor='span'):
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -877,38 +878,38 @@ def hist_by_stability(metdat, catinfo, category, vertloc=80, basecolor='span'):
     colors = utils.get_colors(len(stabconds),basecolor=basecolor)
 
     metdat = metdat.groupby(stabcol)
-    
+
     fig,ax = plt.subplots(len(stabconds),1, figsize=(4,6), sharex=True, sharey=True)
     for ii,stab in enumerate(stabconds):
         data = metdat[varcol].get_group(stab).dropna()
         ax.flatten()[ii].hist(data,
-                              facecolor=colors[ii], 
+                              facecolor=colors[ii],
                               edgecolor='k',
                               bins=50,
-                              weights=np.ones(len(data)) / len(data), 
+                              weights=np.ones(len(data)) / len(data),
                               density=False)
         ax.flatten()[ii].legend([stab], fontsize=10, frameon=False)
-    
+
     ax.flatten()[0].set_title(r'$z={}$m'.format(vertloc))
 
     fig.text(-0.03,0.5,'Frequency [%]',rotation='vertical', ha='center', va='center')
     fig.text(0.5,0,catinfo['labels'][category], ha='center', va='center')
 
     fig.tight_layout()
-    
+
     return fig, ax
 ###########################################
 
 ###########################################
 def stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
-###########################################
+    ###########################################
     """
     make a stacked histogram of data separated by stability class.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -930,29 +931,29 @@ def stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
                    bins=35,
                    edgecolor='k',
                    legend=False,
-                #    weights = np.ones(temp.shape) / len(temp.index), 
+                #    weights = np.ones(temp.shape) / len(temp.index),
                    density=True)
-    
+
     ax.set_xlabel(catinfo['labels'][category])
     # ax.set_title(r'$z={}$m'.format(vertloc))
     fig.legend(stabconds, loc=6, bbox_to_anchor=(1, 0.5), frameon=False)
-    
+
     fig.tight_layout()
-    
+
     return fig, ax
 ###########################################
 
 
 ###########################################
 def monthly_stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
-###########################################
+    ###########################################
     """
     make histograms of data separated by month and stability class.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         category:
             string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
@@ -964,7 +965,7 @@ def monthly_stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
     varcol, vertloc, _= utils.get_vertical_locations(catinfo['columns'][category], location=vertloc)
     colors = utils.get_colors(len(stabconds), basecolor='span')
     months = utils.monthnames()
-    
+
     plotdat = metdat.groupby([metdat.index.month, stabcol])
     plotdat = plotdat[varcol]
 
@@ -978,11 +979,11 @@ def monthly_stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
                        bins=35,
                        edgecolor='k',
                        legend=False,
-                    #    weights = np.ones(temp.dropna().shape) / np.prod(temp.shape), 
+                    #    weights = np.ones(temp.dropna().shape) / np.prod(temp.shape),
                               density=True)
         ax.flatten()[iax].set_title(month)
-        ax.flatten()[iax].set_ylabel('') 
-        
+        ax.flatten()[iax].set_ylabel('')
+
     # fig.legend(stabconds, loc=8, bbox_to_anchor=(0, -0.1), edgecolor='w')
     fig.text(0,0.58, 'Frequency', ha='center', va='center', fontsize=14, rotation='vertical')
     leg = fig.legend(stabconds, loc=9,  bbox_to_anchor=(0.55, 0.15), frameon=False)
@@ -996,14 +997,14 @@ def monthly_stacked_hist_by_stability(metdat, catinfo, category, vertloc=80):
 
 ###########################################
 def normalized_hist_by_stability(metdat, catinfo, vertloc=80):
-###########################################
+    ###########################################
     """
     make a normlizec histogram of data separated by stability class.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         vertloc:
             int or float describing the exact or approximate height of interest along the tower
@@ -1022,7 +1023,7 @@ def normalized_hist_by_stability(metdat, catinfo, vertloc=80):
 
     fig,ax = plt.subplots(figsize=(5,3))
     for jj,cond in enumerate(stabconds):
-        
+
         ax.bar(hours, garb.loc[cond], color=colors[jj], bottom=newbottom)
         newbottom += garb.loc[cond]
 
@@ -1036,14 +1037,14 @@ def normalized_hist_by_stability(metdat, catinfo, vertloc=80):
 
 ###########################################
 def normalized_monthly_hist_by_stability(metdat, catinfo, vertloc=80):
-###########################################
+    ###########################################
     """
     make a normlizec histogram of data separated by stability class.
     Parameters:
         metdat:
             Pandas dataframe containing met mast data
         catinfo:
-            dict containing categorization info for the metmast data. Fore each category, 
+            dict containing categorization info for the metmast data. Fore each category,
             catinfo holds column names, labels, units, and save names
         vertloc:
             int or float describing the exact or approximate height of interest along the tower
@@ -1069,16 +1070,16 @@ def normalized_monthly_hist_by_stability(metdat, catinfo, vertloc=80):
         newbottom = np.zeros(24)
 
         for jj,cond in enumerate(stabconds):
-            
+
             pdat = temp.loc[ii+1,cond]
             ax.flatten()[ii].bar(hours, pdat, color=colors[jj],bottom=newbottom)
             newbottom += pdat
             ax.flatten()[ii].set_title(month)
-            
+
     # fig.legend(stabconds, loc=8, bbox_to_anchor=(0, -0.1), edgecolor='w')
     fig.text(-0.02,0.58, 'Probability [%]', ha='center', va='center', rotation='vertical')
     leg = fig.legend(stabconds, loc=9, bbox_to_anchor=(0.55, 0.125), frameon=False)
-    
+
     fig.tight_layout()
     fig.subplots_adjust(bottom=0.21)
     fig.text(0.5, 0.165, 'Time of Day [Hour]', ha='center', va='center')

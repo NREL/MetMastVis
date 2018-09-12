@@ -1,0 +1,715 @@
+#mw-wrapper {
+  overflow: hidden;
+}
+.mm-header {
+  position: relative;
+  padding-top: 50px;
+}
+.mm-nav {
+  position: absolute;
+  top: -10px;
+  left: -20px;
+  height: 50px;
+  width: calc(100% + 40px);
+  /*margin: -10px -20px 0;*/
+  padding: 0 20px;
+  color: #fff;
+  background: #2196F3;
+}
+.mm-nav a:hover {
+  text-decoration: none;
+}
+.mm-menu .wfs-menu-link-wrapper {
+  margin: 5px 0;
+}
+
+.mm-icon {
+  position: absolute;
+  height: 50px;
+  width: 50px;
+  background: url('/w/images/5/5d/WFSP-turbine-icon.png');
+  background-size: cover;
+}
+.mm-title {
+  margin-left: 50px;
+  font-size: 28px;
+  font-style: italic;
+  font-weight: normal;
+  line-height: 50px;
+  text-decoration: none;
+}
+a .mm-title{
+  color: #fff;
+}
+.mm-nav-link {
+  display: inline-block;
+  height: 50px;
+  min-width: 50px;
+  padding: 10px;
+  font-size: 18px;
+  text-align: center;
+}
+.mm-nav-link:hover {
+  background: #1A77C0;
+}
+.mm-nav-link i {
+  margin-right: 5px;
+}
+a .mm-nav-link {
+  color: #fff;
+  text-decoration: none;
+}
+#menuToggle {
+  cursor: pointer;
+}
+#menuToggle.active {
+  background: #1A77C0;
+}
+#menuToggle.mm-nav-link i {
+  font-size: 24px;
+  vertical-align: middle;
+}
+.mm-menu {
+  display: none;
+  position: absolute;
+  top: 40px;
+  width: calc(100% + 40px);
+  /*width: 100%;*/
+  margin: 0px -20px;
+  padding: 20px 60px;
+  background: rgb(255, 255, 255);
+  box-shadow: rgb(170, 170, 170) 0px 2px 6px;
+  z-index: 1000;
+}
+.mm-menu h3 {
+  color: #2196F3;
+  border-bottom: solid 2px;
+}
+.mm-menu h3 i {
+  margin-right: 10px;
+}
+.mm-menu ul {
+  list-style: none;
+}
+.btn-mm {
+  background: #2196F3;
+  color: #fff;
+}
+.btn-mm:focus,
+.btn-mm:hover {
+  background: #1A77C0;
+  color: #fff;
+}
+span.btn-mm-wrapper a {
+  background: #2196F3;
+  color: #fff;
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+span.btn-mm-wrapper a:focus,
+span.btn-mm-wrapper a:hover {
+  background: #1A77C0;
+  color: #fff;
+}
+.btn-mm-secondary {
+  /*background: #FFC107;
+  color: #0D47A1;*/
+  background: #12f494;
+  color: #333322;
+}
+.btn-mm-secondary:hover {
+  /*background: #FF8F00;
+  color: #1A237E;*/
+  background: #2BDA82;
+  color: #333322;
+}
+.panel-mm {
+  border-color: #2196F3;
+}
+.panel-mm .panel-heading {
+  background: #2196F3;
+  color: #fff;
+}
+.panel-mm-secondary {
+  border-color: #303f9f;
+}
+.panel-mm-secondary .panel-heading {
+  background: #303f9f;
+  color: #fff;
+}
+
+@media screen and (max-width : 768px) {
+  .mm-title {
+    font-size: 18px;
+  }
+  .mm-menu {
+    padding: 0 0 20px;
+  }
+}
+@media screen and (max-width : 500px) {
+  .mm-title, .mm-menu-text {
+    display: none;
+  }
+}
+
+/* WFS Curricula search page styles */
+.full-width {
+  width: 100%;
+}
+
+.wfs-flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.section-wrapper {
+  padding-bottom: 20px;
+  margin-bottom: 0;
+}
+
+.section-wrapper .wrapper-heading {
+  background: #2196F3;
+  padding: 10px;
+  color: #FFFFFF;
+  margin-bottom: 20px;
+}
+
+.section-wrapper .wrapper-heading.no-bottom-margin {
+  margin-bottom: 0;
+}
+
+.section-wrapper .subheading {
+  color: rgba(16, 18, 72, 0.8);
+  padding: 5px 10px;
+  margin: 0 -15px;
+  font-size: 16px;
+  font-weight: bold;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.section-wrapper .subheading a.pathways-link,
+.section-wrapper .subheading a.pathways-link:visited {
+  color: rgba(16, 18, 72, 0.8);
+}
+
+.section-wrapper .subheading a.pathways-link:hover {
+  color: rgba(16, 18, 72, 1);
+  text-decoration: underline;
+}
+
+.section-wrapper .subheading.active-heading {
+  box-shadow: inset -4px 4px 5px 0px rgb(104, 178, 236);
+  background: rgba(33,150,243,0.9);
+}
+
+.section-wrapper .subheading.active-heading a.pathways-link,
+.section-wrapper .subheading.active-heading a.pathways-link:visited {
+  text-decoration: underline;
+}
+
+.section-wrapper .concept-details {
+  margin: 0 -15px;
+  padding: 5px 15px;
+}
+
+.section-wrapper .pathway-content {
+  margin-top: 35px;
+}
+
+.section-wrapper .pathway-content .pathway-curricula {
+  margin-bottom: 10px;
+}
+
+.blue-60 {
+  color: rgba(33,150,243,0.6);
+}
+.blue-bg-60 {
+  background: rgba(33,150,243,0.6);
+}
+.blue-bg-60-gradient {
+  background: none;
+  background: linear-gradient(#FFFFFF, rgba(33,150,243,0.6) 10%);
+}
+.blue-70 {
+  color: rgba(33,150,243,0.7);
+}
+.blue-bg-70 {
+  background: rgba(33,150,243,0.7);
+}
+.blue-80 {
+  color: rgba(33,150,243,0.8);
+}
+.blue-bg-80 {
+  background: rgba(33,150,243,0.8);
+}
+.blue-90 {
+  color: rgba(33,150,243,0.9);
+}
+.blue-bg-90 {
+  background: rgba(33,150,243,0.9);
+}
+
+.curricula-wrapper p {
+  margin: 0;
+}
+
+.curricula-results-header {
+  margin-bottom: 20px;
+}
+
+.applied-filters-search {
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.applied-filters-wrapper {
+  padding-left: 0;
+  min-height: 32px;
+}
+
+.wfs-curricula-search-wrapper {
+  padding-right: 0;
+}
+
+#toggleFilters.filters-closed {
+  transition: 200ms linear transform;
+}
+
+#toggleFilters.filters-closed .fa-caret-down {
+  transform: rotate(-90deg);
+}
+
+.img-placeholder {
+  background: #2196F3;
+  color: #FFFFFF;
+  width: 100%;
+  height: 130px;
+  text-align: center;
+  line-height: 130px;
+}
+
+.item-thumbnail {
+  position: relative;
+  float: left;
+  display: table-cell;
+  vertical-align: middle;
+  background: #EAEAEA;
+  width: 100px;
+  height: 130px;
+  line-height: 130px;
+  border: solid 1px #EAEAEA;
+  overflow: hidden;
+}
+
+.item-thumbnail .teacher-contributed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  line-height: 1;
+  margin-left: 3px;
+}
+
+.item-thumbnail .teacher-contributed .teacher-contributed-apple {
+  position: absolute;
+  top: 7px;
+  left: 5px;
+}
+
+.item-thumbnail .teacher-contributed .stack-bottom {
+  color: #5AE88C;
+  text-shadow: 1px 2px 4px #333333;
+  font-size: 35px;
+}
+
+.item-thumbnail .teacher-contributed .stack-top {
+  color: #000000;
+}
+
+.item-name {
+  float: left;
+  background: #DADADA;
+  width: calc(100% - 105px);
+  margin-left: 5px;
+  padding-left: 10px;
+  font-weight: bold;
+  font-size: 1.5em;
+}
+.item-download {
+  background-color: #5ae88c;
+  width: 35px;
+  float: right;
+  text-align: center;
+  padding: 2px 0px;
+}
+.item-download a {
+  color: #000000;
+}
+.item-abstract {
+  float: left;
+  margin-left: 5px;
+  padding: 5px 10px;
+  width: calc(100% - 230px);
+  max-height: 100px;
+  overflow: hidden;
+}
+.item-abstract .file-count {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+.item-details {
+  float: left;
+  width: 125px;
+  padding: 5px;
+}
+.item-detail {
+  color:#2997db;
+}
+.item-more-info {
+  margin-top: 10px;
+}
+.item-more-info a,
+.item-more-info a:visited {
+  color: #808080;
+}
+.item-more-info a:hover {
+  color: #5D5D5D;
+}
+.filter-tag {
+  margin: 2px;
+  padding: 4px 18px 4px 4px;
+  color: #2997db;
+  display: inline-block;
+  position: relative;
+}
+.filter-tag button.close {
+  position: absolute;
+  top: 1px;
+  right: 0px;
+}
+.result-tag {
+  background-color: #EAEAEA;
+  margin: 2px;
+  padding: 4px;
+  color: #949494;
+  display: inline-block;
+}
+.details-wrapper {
+  background: #EBEDF0;
+  padding: 10px 0;
+  min-height: 150px;
+}
+.tags-wrapper {
+  padding: 10px 0;
+}
+.item-featured{
+  font-size: 16px;
+}
+.item-featured.active {
+  background-color:#5ae88c;
+  text-align: center;
+  padding: 6px 0px;
+}
+.close {
+    color:red;
+}
+.filter-section {
+  padding: 0 25px 5px 0;
+}
+
+.filter-section .filter-title {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.filter-section .filter-count {
+  font-weight: normal;
+  font-style: italic;
+  font-size: 12px;
+  color: #555;
+  margin-left: 5px;
+}
+
+.filter-section ul {
+  list-style: none;
+  padding: 5px;
+  margin-left: 0;
+}
+
+.filter-section li {
+    color:#2997db;
+}
+
+.filter-section label {
+  width:100%;
+  padding: 0 4px;
+	cursor: pointer;
+}
+
+.filter-section label .apply-filter {
+  display: block;
+}
+
+.filter-section label .remove-filter {
+  display: none;
+}
+
+.filter-section input[type="checkbox"]:checked + label {
+    font-weight: bold;
+    background-color: #2997DB;
+    color: white;
+}
+
+.filter-section input[type="checkbox"]:checked + label .apply-filter{
+    display: none;
+}
+
+.filter-section input[type="checkbox"]:checked + label .remove-filter {
+    display: block;
+}
+
+.item-education, .item-subject, .item-topic {
+  display: inline;
+}
+
+@media screen and (max-width : 768px) {
+  .item-abstract {
+    width: calc(100% - 105px);
+  }
+  .item-details {
+    margin-left: 10px;
+  }
+}
+/* End WFS curricula search page styles */
+
+/* WFS Lesson Plan page styles */
+.lesson-plan-content a {
+  color: #2196F3;
+}
+
+.lesson-plan-content a:hover {
+  color: #2183D2;
+}
+
+.lesson-plan-content .stack-bottom {
+  color: #2196F3;
+}
+.lesson-plan-content .stack-top {
+  color: #FFFFFF;
+}
+
+.lesson-plan-title {
+  margin-bottom: 20px;
+}
+
+.lesson-plan-title .teacher-contributed {
+  margin-top: 10px;
+  margin-left: -3px;
+  font-size: 16px;
+}
+
+.lesson-plan-title .teacher-contributed .icon-wrapper {
+  position: relative;
+  float: left;
+}
+
+.lesson-plan-title .teacher-contributed .teacher-contributed-text {
+  float: left;
+  font-size: 18px;
+  margin: 14px 0 0 5px;
+}
+.lesson-plan-title .teacher-contributed .teacher-contributed-apple {
+  position: absolute;
+  top: 11px;
+  left: 8px;
+}
+
+
+.lesson-plan-title .teacher-contributed .stack-bottom {
+  color: #5AE88C;
+  font-size: 50px;
+}
+
+.lesson-plan-title .teacher-contributed .stack-top {
+  color: #000000;
+}
+
+.lesson-plan-detail-wrapper {
+  background: #2196F3;
+  color: #FFFFFF;
+  padding: 10px 15px;
+  margin-bottom: 5px;
+  font-size: 18px;
+}
+
+.lesson-plan-files-link-wrapper {
+  margin-top: 15px;
+  font-size: 20px;
+  display: block;
+}
+
+.category-education {
+  color: #2196F3;
+  font-size: 12px;
+}
+
+.edu-image {
+  margin-bottom: 15px;
+}
+
+.lesson-plan-category {
+  margin-bottom: 10px;
+  border: solid 2px #2196F3;
+  float: left;
+  width: 100%;
+}
+
+.lesson-plan-category .category-title {
+  background: #2196F3;
+  color: #FFFFFF;
+  padding: 5px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.lesson-plan-tag {
+  background: #EAEAEA;
+  color: #949494;
+  padding: 5px;
+  margin: 0 0 10px 10px;
+  width: 80%;
+  border: solid 1px;
+  font-weight: bold;
+}
+
+#lessonPlanResources {
+  display: flex;
+  flex: 1 0 auto;
+  flex-wrap: wrap;
+  float: left;
+  width: 100%;
+}
+
+/* Styles for WFS Resources (formerly called files) */
+.lesson-plan-resource {
+  margin-bottom: 10px;
+}
+
+.lesson-plan-resource .resource-details {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  padding: 15px 5px;
+  border: solid 2px #2196F3;
+  border-bottom: none;
+}
+
+.lesson-plan-resource .resource-details .resource-name {
+  position: absolute;
+  color: #949494;
+  font-size: 18px;
+}
+
+.lesson-plan-resource .resource-details .resource-icon {
+  font-size: 100px;
+  color: #EAEAEA;
+}
+
+.lesson-plan-resource .resource-url {
+  width: 100%;
+  height: 50px;
+  background: #2196F3;
+  padding: 12px 10px;
+}
+
+.lesson-plan-resource .resource-url:hover {
+  background: #1A72B9;
+}
+
+.lesson-plan-resource .resource-url a {
+  color: #FFFFFF !important;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.lesson-plan-resource .resource-url a:hover {
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+.lesson-plan-resource .resource-desc {
+  color: #949494;
+  padding: 2px 5px;
+}
+
+.lesson-plan-resource.small-resource {
+  width: 140px;
+  height: 155px;
+  float: left;
+  margin: 0 10px 10px 0;
+}
+
+.lesson-plan-resource.small-resource .resource-details {
+  height: 115px;
+}
+
+.lesson-plan-resource.small-resource .resource-details .resource-name {
+  font-size: 15px;
+}
+
+.lesson-plan-resource.small-resource .resource-details .resource-icon {
+  font-size: 70px;
+  padding-top: 10px;
+}
+
+.lesson-plan-resource.small-resource .resource-url {
+  height: 40px;
+  padding: 8px 10px;
+}
+
+/* Styles for WFS Lesson Plan Files */
+.resource-external {
+  background: #2196F3;
+  width: 100%;
+  height: 115px;
+  line-height: 110px;
+  padding: 0 20px;
+}
+@media (min-width: 768px) {
+  .wfs-lesson-plan-file img {
+    width: 100% !important;
+    height: auto !important;
+  }
+  .lesson-plan-files-link-wrapper {
+    display: none;
+  }
+  .section-wrapper .subheading.active-heading:before {
+    content: "";
+    position: absolute;
+    top: 32px;
+    left: calc(50% - 80px);
+    border-top: 30px solid rgba(33,150,243,0.9);
+    border-left: 80px solid transparent;
+    border-right: 80px solid transparent;
+  }
+}
+/* End WFS Lesson Plan page styles */

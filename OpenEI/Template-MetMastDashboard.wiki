@@ -1,0 +1,41 @@
+<noinclude>
+    This is the '''{{BASEPAGENAME}}''' template.  It is used for the [[Met Mast Portal]] dashboard display.
+
+    ''It is not intended for any other use.''
+
+    =====Parameters=====
+    * None
+
+    =====Usage=====
+    It should be called in the following format:
+    <pre>{{MetMastDashboard}}</pre>
+
+    [[Category:Templates]]
+    [[Category:NWTC]]
+    [[Category:MetMast]]
+</noinclude>
+<includeonly>
+
+{{#Widget:MetMastStyle}}
+{{#Widget:MetMastUtils}}
+{{#Widget:MetMastFuncs}}
+
+<div id = "header"> 
+ <h1>Graphs from CSVs - 19</h1>
+</div>
+
+{{#Widget:MetMastVis}}
+
+<div id = "load"> Selecting Data... </div>
+
+<table id = "var_table" display = "none">
+ <tr>
+  <th colspan = "2"> Previous Selections </th>
+ </tr>
+</table>
+
+<div id = "prev_chart"></div>
+
+<div id = "chart"></div>
+
+</includeonly>

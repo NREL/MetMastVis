@@ -1,0 +1,21 @@
+<noinclude>This widget helps with Wind for Schools Portal content.
+<pre>
+{{#Widget:WFSP-Nav}}
+</pre>
+[[Category:Widgets]]
+[[Category:Wind for Schools]]
+</noinclude>
+<includeonly><!--Widget:WFSP-->
+
+<style>
+
+MetMast-Nav.css goes here
+
+</style>
+
+<script>
+
+MetMast-Nav.js goes here
+
+</script>
+</includeonly>

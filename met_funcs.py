@@ -1,5 +1,8 @@
 """
-family of functions and classes to be used in met tower data analysis
+.. module: met_funcs
+:platform: Unix, Windows
+:synopsis: This code is used as a general family of functions and classes that can be used in the MET tower data analysis. 
+.. moduleauthor:: Nicholas Hamilton <Nicholas.Hamilton@nrel.gov> Rafael Mudafort <Rafael.Mudafort@nrel.gov> Lucas McCullum <Lucas.McCullum@nrel.gov>   
 """
 
 import numpy as np
@@ -13,10 +16,26 @@ import utils
 ####################################
 # Data loading
 ####################################
+
 def load_met_data(inputfiles, verbose=False):
     """
+    Load the data with a lambda function.
 
+    This function extracts the data from the input Comma-Separated (.csv) files and outputs them into a pandas DataFrame.
+        
+    :param inputfiles: All of the input files (.csv) to be loaded for analysis.
+
+    :param verbose: Defines whether or not the name of the file should be printed as the function runs.
+
+    :type inputfiles: list
+
+    :type verbose: Boolean
+
+    :returns metdat: Contains all of the requested data extracted from the input files.
+
+    :rtype metdat: pandas DataFrame
     """
+
     # date parser for pandas
     dp = lambda x: pd.datetime.strptime(x, '%d-%m-%Y %H:%M:%S')
     filecount = 0
@@ -47,8 +66,23 @@ def load_met_data(inputfiles, verbose=False):
 ####################################
 def load_met_data_alt(inputfiles, verbose=False):
     """
-    alternate data load to avoid use of data parser lambda function
+    Load the data without a lambda function.
+
+    This function extracts the data from the input Comma-Separated (.csv) files and outputs them into a pandas DataFrame. This is an alternate to the previous function to avoid the use of a data parser lambda function.
+        
+        :param inputfiles: All of the input files (.csv) to be loaded for analysis.
+
+    :param verbose: Defines whether or not the name of the file should be printed as the function runs.
+
+    :type inputfiles: list
+
+    :type verbose: Boolean
+
+    :returns metdat: A pandas DataFrame containing all of the requested data extracted from the input files.
+
+    :rtype metdat: pandas DataFrame
     """
+
     filecount = 0
 
     for fName in inputfiles:
@@ -93,7 +127,17 @@ def load_met_data_alt(inputfiles, verbose=False):
 ####################################
 def drop_nan_cols(metdat):
     """
-    Use columns with 'qc' suffix as a mask to filter data
+    Remove empty columns.
+
+    This function takes the contents of the pandas DataFrame containing all of the data from the input files and filters it by removing any missing columns (e.g., N/A).
+        
+    :param metdat: Contains all of the requested data extracted from the input files.
+
+    :type metdat: pandas DataFrame
+
+    :returns temp: Contains all of the requested data extracted from the input files without any missing columns (e.g., N/A)
+
+    :rtype temp: pandas DataFrame
     """
     
     temp = metdat.dropna(axis=1,how='all')
@@ -105,7 +149,25 @@ def drop_nan_cols(metdat):
 
 ###########################################
 def qc_mask(metdat):
+<<<<<<< HEAD
     temp = [name for name in list(metdat.columns.values) if ' QC' not in name if 'records' not in name.lower()]
+=======
+    """
+    Remove columns for quality control.
+
+    This function takes the contents of the pandas DataFrame containing all of the data from the input files and filters data based on a mask of columns containing the term ‘qc’ (Quality Control parameters). 
+        
+    :param metdat: Contains all of the requested data extracted from the input files.
+
+    :type metdat: pandas DataFrame
+
+    :returns dfFilt: Contains a filtered version of the requested data extracted from the input files by removing columns containing a quality control parameter. 
+
+    :rtype dfFilt: pandas DataFrame
+    """
+
+    temp = [name for name in list(metdat.columns.values) if ' QC' not in name]
+>>>>>>> lucasrepo/master
     qcNames = [name for name in list(metdat.columns.values) if ' QC' in name]
     fNames = [name for name in temp if name + ' QC' in qcNames]
     
@@ -128,9 +190,23 @@ def qc_mask(metdat):
 ###########################################
 def flag_stability(metdat):
     """
-    Add a new set of columns denoting stability class based on 
-    monin-obukhov length at various heights.
+    Denote stability based on Obukhov Length.
+
+    This function takes the contents of the pandas DataFrame containing all of the data from the input files and adds a new set of columns denoting a stability class based on the Obukhov Length at various heights.
+        
+    :param metdat: Contains all of the requested data extracted from the input files.
+
+    :type metdat: pandas DataFrame
+
+    :returns stabcat: Contains the stability flag parameter for each desired row of the input data based on the Obukhov Length and can be classified as Very Stable, Stable, Neutral, Unstable, and Very Unstable.
+
+    :returns stabconds: Contains the values of the Obukhov Length for each desired row of the input data.
+
+    :rtype stabcat: dictionary
+
+    :rtype stabconds: list
     """
+
     MOLcols = [col for col in metdat.columns if 'monin-obukhov length' in col.lower()]
     for col in MOLcols:
         # get probe height
@@ -159,16 +235,39 @@ def flag_stability(metdat):
 ###########################################
 def groom_data(metdat, varcats):
     """
-    drop columns not in any of the categories
-    filter TI, temperature, stability parameters
+    Trim data based on several parameters.
 
-    TODO: break out into separate functions? make more general?
-    #, dropcols=True, filter=['ti','monin-obukhov length','temperature','gradient richarson']):
+    This function takes the contents of the pandas DataFrame containing all of the data from the input files as well as a list of categories that are desired to be kept and outputs a statement displaying the remaining number of columns left after filtering. 
+
+    *Possible Edit: This function could be divided into separate functions or could be made more general. Additionally the following code could be used… *
+    .. code-block:: python
+        dropcols = True
+        filter = [‘ti’, 'monin-obukhov length','temperature','gradient richarson']):
+        
+    :param metdat: Contains all of the requested data extracted from the input files.
+
+    :param varcats: All the categories which are desired to be kept after filtering. 
+
+    :type metdat: pandas DataFrame
+
+    :type varcats: list
+
+    :returns: A print statement displaying the number of columns after filtering for columns not contained in the list of desired columns, Turbulent Intensity, Obukhov Length, Sonic Temperature, and Gradient Richardson Number.
+
+    :rtype: string
     """
+<<<<<<< HEAD
     # ## drop columns
     # keepcols = [v  for x in varcats for v in varcats[x]]
     # dropcols = [col for col in metdat.columns if col not in keepcols]
     # metdat.drop(dropcols, axis=1, inplace=True)
+=======
+
+    ## drop columns
+    keepcols = [v  for x in varcats for v in varcats[x]]
+    dropcols = [col for col in metdat.columns if col not in keepcols]
+    metdat.drop(dropcols, axis=1, inplace=True)
+>>>>>>> lucasrepo/master
 
     # filter TI to where wind speed >= 1 m/s
     # spdcols = [col for col in varcats['speed'] if 'sonic' not in col.lower()]
@@ -194,6 +293,24 @@ def groom_data(metdat, varcats):
 
 ###########################################
 def reject_outliers(data, m=5):
+    """
+    Remove any outliers.
+
+    This function takes the contents of the pandas DataFrame containing all of the data from a desired data file and outputs a filtered version by removing any outliers.
+        
+    :param data: Contains the desired data that is to be filtered for outliers.
+
+    :param m: Denotes the number of standard deviations that are desired as a cutoff for defining outliers. 
+
+    :type data: pandas DataFrame
+
+    :type m: integer
+
+    :returns data: A filtered version of the input data file by rejecting any outliers above *m* (5) standard deviations.
+
+    :rtype data: pandas DataFrame
+    """
+
     return data[abs(data - np.mean(data)) < m * np.std(data)]
 ###########################################
 
@@ -248,7 +365,25 @@ def fix_pressure_data(metdat, catinfo):
 # Data organization
 ###########################################
 def categorize_fields(metdat, keeplist=None, excludelist=None):
-    """read categories from pandas dataframe of met mast data"""
+    """
+    Categorize all of the fields of the data.
+
+    This function takes the contents of the pandas DataFrame containing all of the data from a desired input data file and outputs the variable categories, units, labels for plotting, and strings for saving files and figures.
+        
+        :param metdat: A pandas DataFrame containing all of the requested data extracted from the input files.
+
+        :param keeplist: A list containing all of the categories that are to be kept after filtering the desired input data.
+        
+        :param excludelist: A list containing all of the categories that are to be excluded after the filtering desired input data.
+
+        :returns varcats: A dictionary containing all of the categories in the desired data.
+
+        :returns varunits: A dictionary containing all of the units of the desired data.
+
+        :returns varlabels: A dictionary containing all of the labels that will be used for plotting the desired data.
+
+        :returns varsave: A dictionary containing all of the string values that will be used for saving files and figures of the desired data.
+    """
     
     colnames = metdat.columns
     
@@ -292,7 +427,7 @@ def categorize_fields(metdat, keeplist=None, excludelist=None):
     varlabels['speed'] = 'Wind ' + varlabels['speed']
     varlabels[ 'stability parameter z/l'] =  'Stability Parameter z/L [--]'
 
-    # strings for saveing files and figures
+    # strings for saving files and figures
     varsave = {x: x.replace(' ','_').replace('/','') for x in varcats}
     
     return varcats, varunits, varlabels, varsave
@@ -302,8 +437,15 @@ def categorize_fields(metdat, keeplist=None, excludelist=None):
 ########################################### 
 def get_catinfo(metdat):
     """
-    get and collect categorical info for met mast data
+    Get categorical information of the data.
+
+    This function takes the contents of the pandas DataFrame containing all of the data from a desired input data file and returns a set containing all of the categories, units, labels for plotting, and strings for saving files and figures.
+        
+        :param metdat: A pandas DataFrame containing all of the requested data extracted from the input files.
+
+        :returns catinfo: A set containing all of the categories, units, labels for plotting, and strings for saving files and figures for the desired data.
     """
+
     varcats, varunits, varlabels, varsave = categorize_fields(metdat, keeplist=True)
 
     catinfo = {}
@@ -378,6 +520,16 @@ def fix_data_for_transfer(metdat):
 
 ###########################################
 def categories_to_exclude():
+    """
+    Define categories to exclude for filtering.
+
+    This function does not take in any inputs but does output a list containing all of the categories that are chosen to be excluded from the desired input data.
+        
+        :param: None.
+
+        :returns excats: A list containing all of the categories that are chosen to be excluded from the desired input data.
+    """
+
     excats = ['advection',
               'angle',
               'boom',
@@ -419,6 +571,16 @@ def categories_to_exclude():
 
 ###########################################
 def categories_to_keep():
+    """
+    Define categories to keep for filtering.
+
+    This function does not take in any inputs but does output a list containing all of the categories that are chosen to be included from the desired input data.
+        
+        :param: None.
+
+        :returns keepcats: A list containing all of the categories that are chosen to be included from the desired input data.
+    """
+
     keepcats = ['air density',
                  'air pressure',
                  'air temperature',
@@ -448,6 +610,16 @@ def categories_to_keep():
 
 ###########################################
 def get_units():
+    """
+    Get units for the data.
+
+    This function does not take in any inputs but does output a dictionary containing all of the units of the desired input data.
+        
+        :param: None.
+
+        :returns units: A dictionary containing all of the units of the desired input data.
+    """
+
     units = {'density': r'[kg/m$^3$]',
              'pressure': r'[mbar]',
              'temperature': r'[$^\circ C$]',
@@ -471,17 +643,17 @@ def get_units():
 ###########################################
 def make_datetime_vector(filename, span=10, freq=20.0):
     """
-    Assumes the input is a string with format
-        '%m_%d_%y_%H_%M_%S_%U.mat'
-        and that each file represents 10 minutes worth of data at 20 Hz.
-    Parameters
-    ----------
-    filename : str
-    span : int 
-        span in minutes of data included in filename
-    freq : float
-        frequency of data in Hz
+    Generate a time range for the data.
+
+    This function takes inputs from filenames of the form ‘%m_%d_%y_%H_%M_%S_%U.mat' of the desired span and frequency of data and generates a vector for the date and time for the data.
+        
+        :param filename: A string denoting the desired file name for the input data.
+
+        :param span: An integer value used to define the span of the data included in the filename (Minutes).
+
+        :returns timerange: A pandas DatetimeIndex value used to define the range of times with which the data covers.
     """
+
     # caluclate number of data (periods) in file
     periods = int(span*60*freq)
     
@@ -504,16 +676,22 @@ def make_datetime_vector(filename, span=10, freq=20.0):
 # Begin sections of code for IEC event detection
 ###########################################
 def make_dataframe_for_height(inputdata, timerange, probeheight=74, include_UTC=False):
+"""
+    Generate a DataFrame based on the probe height.
+
+    This function takes inputs from desired input data and returns a pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+        
+        :param inputdata: A dictionary containing all of the desired input data.
+
+        :param timerange: A pandas DatetimeIndex value used to define the range of times with which the data covers.
+
+        :param probeheight: An integer or float value used to define the desired height of the probe from which to begin data analysis (m). 
+
+        :param include_UTC: A Boolean value used to determine whether or not an UTC timestamp is desired of the form ‘time_UTC’. 
+
+        :returns sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
     """
-    
-    Parameters
-    ----------
-    inputdata : dict
-    timerange : pandas.core.indexes.datetimes.DatetimeIndex
-    probeheight : int
-    """
-    
-    
+
     # select all variables at a given height
     varnames = list(inputdata.keys())
     varnames = [var for var in varnames if str(probeheight) in var]
@@ -544,11 +722,15 @@ def make_dataframe_for_height(inputdata, timerange, probeheight=74, include_UTC=
 ###########################################
 def setup_IEC_params(sonicdat, probeheight=100):
     """
-    parameters
-    ----------
-    sonicdat : Pandas.DataFrame
-        dataframe with at least
-    probeheight : int, float
+    Establish IEC parameters.
+
+    This function takes inputs from a pandas DataFrame containing all of the desired data at the given probe height and establishes all of the International Electrotechnical Commission (IEC) parameters for the given input data and probe height. 
+        
+        :param sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+
+        :param probeheight: An integer or float value used to define the desired height of the probe from which to begin data analysis (m).  
+
+        :returns params: A dictionary containing all of the parameters established by the IEC for the given input data and probe height. 
     """
     
     ### quantities of interest for IEC 
@@ -614,10 +796,19 @@ def setup_IEC_params(sonicdat, probeheight=100):
 ###########################################
 def find_EWM_events(sonicdat, params):
     """
-    look for extreme wind speed events,
-    events will be extracted from df and concatenated to 
-    a larger  will be used to index files later
+    Find extreme wind speed events.
+
+    This function takes inputs from a pandas DataFrame containing all of the desired data and International Electrotechnical Commission (IEC) parameters at the given probe height, determines extreme wind speed events, and returns the findings in lists separating one-year and 50-year events. These lists will be concatenated to a larger list which will be used to index files later.
+        
+        :param sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+
+        :param params: A dictionary containing all of the parameters established by the IEC for the given input data and probe height.
+
+        :returns Ve01eventfound: A list of all the extreme wind events higher than within the past year.
+
+        :returns Ve50eventfound: A list of all the extreme wind events higher than within the past 50 years.
     """
+
 
     # Compare extreme wind speeds to data
     # extract df of events
@@ -632,12 +823,17 @@ def find_EWM_events(sonicdat, params):
 ###########################################
 def find_EOG_events(sonicdat, params, T=10.5):
     """
-    look for extreme operating gust events,
-    if found, return True, will be used to index files later
-    
-    Parameters
-    ----------
-    T: float, Period for search
+    Find extreme operating wind gust events.
+
+    This function takes inputs from a pandas DataFrame containing all of the desired data and International Electrotechnical Commission (IEC) parameters at the given period for search, determines extreme operating wind gust events, and returns the findings in an object which can be used to index files later.
+        
+        :param sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+
+        :param params: A dictionary containing all of the parameters established by the IEC for the given input data and probe height.
+
+        :param T: A float used to define the period for search (Seconds).
+
+        :returns EOGeventfound: An object used to store any significant extreme operating wind gust events.
     """
 
     t = np.linspace(0,T,100)
@@ -675,9 +871,17 @@ def find_EOG_events(sonicdat, params, T=10.5):
 ###########################################
 def find_ETM_events(sonicdat, params):
     """
-    look for extreme turbulence model events,
-    if found, return True, will be used to index files later
+    Find extreme turbulence model events.
+
+    This function takes inputs from a pandas DataFrame containing all of the desired data and International Electrotechnical Commission (IEC) parameters at the given period for search, determines extreme turbulence model events, and returns the findings in an object which can be used to index files later.
+        
+        :param sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+
+        :param params: A dictionary containing all of the parameters established by the IEC for the given input data and probe height.
+
+        :returns ETMeventfound: An object used to store any significant extreme turbulence model events.
     """
+
     # Extreme turbulence model
     c = 2 # m/s
     sigmatest = c*params['Iref']*(0.072*(params['Vave']/c+3)*(params['vhub']/c+4)+10)
@@ -697,10 +901,20 @@ def find_ETM_events(sonicdat, params):
 
 ###########################################     
 def find_EDC_events(sonicdat, params, T = 6):
-    """
-    look for extreme direction change events,
-    if found, return True, will be used to index files later
-    """
+"""
+Find extreme wind direction change events.
+
+This function takes inputs from a pandas DataFrame containing all of the desired data and International Electrotechnical Commission (IEC) parameters at the given period for search, determines extreme wind direction change events, and returns the findings in an object which can be used to index files later.
+	
+    :param sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+
+    :param params: A dictionary containing all of the parameters established by the IEC for the given input data and probe height.
+
+	:param T: A float used to define the period for search (Seconds).
+
+    :returns EDCeventfound: An object used to store any significant extreme wind direction change events.
+"""
+
     # seconds * sampling freq
     stride = int(T*params['freq'])
     
@@ -730,9 +944,19 @@ def find_EDC_events(sonicdat, params, T = 6):
 ###########################################
 def find_ECD_events(sonicdat, params, T = 10):
     """
-    look Extreme coherent gust with direction change (ECD),
-    if found, return True, will be used to index files later
+    Find extreme coherent wind gust with wind direction change events.
+
+    This function takes inputs from a pandas DataFrame containing all of the desired data and International Electrotechnical Commission (IEC) parameters at the given period for search, determines extreme coherent wind gust with wind direction change events, and returns the findings in an object which can be used to index files later.
+        
+        :param sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+
+        :param params: A dictionary containing all of the parameters established by the IEC for the given input data and probe height.
+
+        :param T: A float used to define the period for search (Seconds).
+
+        :returns ECDeventfound: An object used to store any significant extreme coherent wind gust with wind direction change events.
     """
+
     # Extreme coherent gust with direction change (ECD)
     
     # extreme coherent gust velocity magnitude (delta)
@@ -788,9 +1012,19 @@ def find_ECD_events(sonicdat, params, T = 10):
 ###########################################
 def find_EWS_events(sonicdat, params, T = 12):
     """
-    look Extreme wind shear (EWS),
-    if found, return True, will be used to index files later
+    Find extreme coherent wind shear events.
+
+    This function takes inputs from a pandas DataFrame containing all of the desired data and International Electrotechnical Commission (IEC) parameters at the given period for search, determines extreme coherent wind shear events, and returns the findings in an object which can be used to index files later.
+        
+        :param sonicdat: A pandas DataFrame containing all of the desired data at the given probe height including wind speed, wind direction, and the date and timestamps of the input data.
+
+        :param params: A dictionary containing all of the parameters established by the IEC for the given input data and probe height.
+
+        :param T: A float used to define the period for search (Seconds).
+
+        :returns EWSeventfound: An object used to store any significant extreme wind shear events.
     """
+
     # Extreme wind shear (EWS)
 
     # extreme coherent gust velocity magnitude
@@ -831,5 +1065,3 @@ def find_EWS_events(sonicdat, params, T = 12):
         
     return EWSeventfound
 ###########################################
-
-

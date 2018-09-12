@@ -1,0 +1,304 @@
+<noinclude>This widget helps with the Met Mast Portal Dashboard content.
+
+<pre>
+{{#Widget:MetMastStyle}}
+</pre>
+
+[[Category:Widgets]]
+[[Category:NWTC]]
+[[Category:MetMast]]
+
+</noinclude>
+<includeonly><!--Widget:MetMastStyle-->
+
+<style>
+#pre_select {
+    display: inline;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#files_select_label {
+    display: none;
+    font-size: 16px;
+    font-weight: bold;
+}
+#files_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    vertical-align: middle;
+}
+#plot_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#category_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#abscissa_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#group-by_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#vertloc_select {
+    display: none;
+    border: 1px solid black;
+    border-radius: 3px;
+    font-size: 16px;
+    font-weight: bold;
+}
+#range_length_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#format_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#month_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#year_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#start_month_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#start_year_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#end_month_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#end_year_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#row_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#col_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#fit_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#bin_select {
+    display: none;
+    border: 1px solid black;
+    border-radius: 3px;
+    font-size: 16px;
+    font-weight: bold;
+}
+#sector_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#bin-arrange_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#curvefit_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#color_select {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #00A4E4;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#start_plot {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #5E6A71;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#save {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #5E6A71;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#prev_plot {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #5E6A71;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#prev_sel {
+    display: none;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #5E6A71;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#reset {
+    display: inline;
+    border: 1px;
+    border-radius: 3px;
+    background-color: #5E6A71;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+#load {
+    font-size: 16px;
+    font-weight: bold;
+}
+#var_table {
+    display: none;
+    border-collapse: collapse;
+    padding: 2px 2px;
+}
+
+#var_table td, #var_table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#var_table tr:nth-child(even){background-color: #f2f2f2;}
+
+#var_table tr:hover {background-color: #ddd;}
+
+#var_table th {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    text-align: center;
+    background-color: #00A4E4;
+    color: white;
+}
+#prev_chart {
+    display: none;
+    height: 700px;
+}
+#chart {
+    height: 700px;
+}
+
+</style>
+</includeonly>

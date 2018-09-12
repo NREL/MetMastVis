@@ -25,6 +25,9 @@ Download or clone git repo. Go to town.
 Nicholas Hamilton
 nicholas.hamilton@nrel.gov
 
+Lucas McCullum
+lumccul3@gmail.com
+
 ## License
 This project is licensed under the Apache License - see the LICENSE file for details
 

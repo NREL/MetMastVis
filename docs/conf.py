@@ -12,22 +12,24 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-#import os
-#import sys
-#sys.path.insert(0, os.path.abspath('root'))
+import os
+import sys
 
+cwd = os.getcwd()
+project_root = os.path.dirname(cwd)
+sys.path.insert(0, project_root)
+# import
 
 # -- Project information -----------------------------------------------------
 
 project = 'MetMast'
-copyright = '2018, Lucas McCullum'
-author = 'Lucas McCullum'
+copyright = '2018, Nicholas Hamilton, Lucas McCullum'
+author = 'Nicholas Hamilton, Lucas McCullum'
 
 # The short X.Y version
-version = ''
+version = '1.0'
 # The full version, including alpha/beta/rc tags
 release = '2018'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -40,16 +42,24 @@ release = '2018'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.githubpages',
+    'sphinx.ext.viewcode',
 ]
 
+source_parsers = {
+    '.md': 'recommonmark.parser.CommonMarkParser',
+}
+
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['ntemplates']
+templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+# source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
@@ -64,11 +74,10 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = []
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -86,7 +95,7 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['nstatic']
+html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -98,12 +107,10 @@ html_static_path = ['nstatic']
 #
 # html_sidebars = {}
 
-
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'MetMastdoc'
-
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -130,19 +137,14 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'MetMast.tex', 'MetMast Documentation',
-     'Lucas McCullum', 'manual'),
+     'Nicholas Hamilton, Lucas McCullum', 'manual'),
 ]
-
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'metmast', 'MetMast Documentation',
-     [author], 1)
-]
-
+man_pages = [(master_doc, 'metmast', 'MetMast Documentation', [author], 1)]
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -150,10 +152,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'MetMast', 'MetMast Documentation',
-     author, 'MetMast', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, 'MetMast', 'MetMast Documentation', author, 'MetMast',
+     'One line description of project.', 'Miscellaneous'),
 ]
-
 
 # -- Extension configuration -------------------------------------------------

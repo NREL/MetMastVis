@@ -1,5 +1,5 @@
 # MetMast visualization and analysis toolbox
-Python package for loading filtering and visualizing data produced by the met masts at the National Wind Technology Center (NWTC) part of the National Renewable Energy Laboratory. 
+Python package for loading filtering and visualizing data produced by the met masts at the National Wind Technology Center (NWTC) part of the National Renewable Energy Laboratory.
 
 ## Getting Started
 The following codebase is developed in Python 3.6 and makes heavy use of numpy, matplotlib, and pandas. Wind rose figures also require the python-windrose package available at https://github.com/python-windrose/windrose.
@@ -24,6 +24,10 @@ Download or clone git repo. Go to town.
 ## Authors
 Nicholas Hamilton
 nicholas.hamilton@nrel.gov
+
+Lucas McCullum
+lumccul3@gmail.com
+
 
 ## License
 This project is licensed under the Apache License - see the LICENSE file for details

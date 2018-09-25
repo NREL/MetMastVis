@@ -28,7 +28,6 @@ nicholas.hamilton@nrel.gov
 Lucas McCullum
 lumccul3@gmail.com
 
-
 ## License
 This project is licensed under the Apache License - see the LICENSE file for details
 

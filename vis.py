@@ -480,6 +480,66 @@ def winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', excl
     return fig, ax#, leg
 ###########################################
 
+
+###########################################
+def scatter_by_height(metdat,
+                    catinfo,
+                    category1,
+                    category2,
+                    vertloc=80,
+                    basecolor='red'):
+    ###########################################
+    """
+    make scatter plot from pandas.Series wind direction and some other value of the same size. Includes blocked off angles from IEC standards.
+        Plot monthly average profiles against one another.
+    Parameters:
+        metdat:
+            Pandas dataframe containing met mast data
+        catinfo:
+            dict containing categorization info for the metmast data. Fore each category,
+            catinfo holds column names, labels, units, and save names
+        category1:
+            string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
+        category2:
+            string specifying category of information to plot (e.g. 'speed', 'stability', etc.)
+        vertloc:
+            int or float describing the exact or approximate height of interest along the tower
+        basecolor:
+            string with the color code info to get from utils.
+        exclude_angles:
+            tuple or list of tuples of start and stop angles to shade out regions according to IEC standards
+    """
+
+    # set up data
+    varcolx, vertloc, _ = utils.get_vertical_locations(
+        catinfo['columns'][category1], location=vertloc)
+    varcoly, vertloc, _ = utils.get_vertical_locations(
+        catinfo['columns'][category2], location = vertloc)
+
+    colors = utils.get_nrelcolors()
+
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111)
+
+    ax.scatter(
+        metdat[varcolx],
+        metdat[varcoly],
+        marker='.',
+        facecolor=colors[basecolor][1],
+        color='k',
+        lw=0.5,
+        alpha=0.9)
+
+
+    # ax.set_title(r'$z={}$ m'.format(vertloc))
+    ax.set_xlabel(catinfo['labels'][category1])
+    ax.set_ylabel(catinfo['labels'][category2])
+
+    return fig, ax  #, leg
+
+
+###########################################
+
 ###########################################
 def stability_winddir_scatter(metdat, catinfo, category, vertloc=80, basecolor='red', exclude_angles=[(46, 228)]):
     ###########################################

@@ -449,7 +449,7 @@ def get_catinfo(metdat):
 ###########################################
 
 ###########################################
-def fix_data_for_transfer(metdat):
+def fix_data_for_transfer(metdat, fix_pressure=False):
     """
     Combined QC and filtering of 10-minute data for transfer to web server.
 
@@ -498,7 +498,8 @@ def fix_data_for_transfer(metdat):
     catinfo['labels'] = varlabels
     catinfo['save'] = varsave
 
-    metdat = fix_pressure_data(metdat, catinfo)
+    if fix_pressure:
+        metdat = fix_pressure_data(metdat, catinfo)
 
     return metdat, catinfo
 ###########################################

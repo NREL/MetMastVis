@@ -1138,7 +1138,7 @@ def normalized_monthly_hist_by_stability(metdat, catinfo, vertloc=80):
 
     # fig.legend(stabconds, loc=8, bbox_to_anchor=(0, -0.1), edgecolor='w')
     fig.text(-0.02,0.58, 'Probability [%]', ha='center', va='center', rotation='vertical')
-    leg = fig.legend(stabconds, loc=9, bbox_to_anchor=(0.55, 0.125), frameon=False)
+    leg = fig.legend(stabconds, loc=9, bbox_to_anchor=(0.55, 0.145), frameon=False)
 
     fig.tight_layout()
     fig.subplots_adjust(bottom=0.21)
